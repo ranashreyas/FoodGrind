@@ -14,7 +14,7 @@ class DiningHall {
   late String image;
   late double allRating;
   late List menu;
-  double dailyRating = 5;
+  double dailyRating = 3;
 
   DiningHall(this.name, this.image);
 
@@ -42,6 +42,8 @@ var clarkKerr = DiningHall('Clark Kerr', '');
 var foothill = DiningHall('Foothill', '');
 var crossroads = DiningHall('Crossroads', '');
 
+var chosenHall = cafeThree;
+
 List<DiningHall> halls = [clarkKerr, cafeThree, foothill, crossroads];
 List<String> stars = ['★', '★★', '★★★', '★★★★', '★★★★★'];
 
@@ -63,6 +65,33 @@ class HomeRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double buttonFontSize = 30;
+    Widget homeBlock(DiningHall hall, int chosenColor) {
+      return Container(
+        height: 200,
+        width: double.infinity,
+        color: Color(chosenColor),
+        padding: const EdgeInsets.all(30),
+        child: Align(
+          alignment: const Alignment(-1, 0),
+          child: Column(
+            children: [
+              Text(
+                hall.name,
+                style: const TextStyle(fontSize: buttonFontSize),
+              ),
+              Text(
+                (hall.dailyRating > 0)
+                    ? stars[hall.dailyRating.round() - 1]
+                    : 'No Reviews Yet',
+                style: const TextStyle(
+                    color: Colors.yellow, fontSize: buttonFontSize),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFC4C4C4),
       appBar: AppBar(
@@ -73,100 +102,29 @@ class HomeRoute extends StatelessWidget {
         Column(
           children: <Widget>[
             GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/food');
-              },
-              child: Container(
-                height: 200,
-                width: double.infinity,
-                color: Colors.white,
-                padding: const EdgeInsets.all(30),
-                child: Align(
-                  alignment: const Alignment(-1, 0),
-                  child: Column(
-                    children: [
-                      Text(
-                        halls[0].name,
-                        style: const TextStyle(fontSize: buttonFontSize),
-                      ),
-                      Text(
-                        (halls[0].dailyRating > 0)
-                            ? stars[halls[0].dailyRating.round() - 1]
-                            : 'No Reviews Yet',
-                        style: const TextStyle(
-                            color: Colors.yellow, fontSize: buttonFontSize),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                onTap: () {
+                  chosenHall = halls[0];
+                  Navigator.pushNamed(context, '/food');
+                },
+                child: homeBlock(halls[0], 0xFFFFFFFF)),
             GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/food');
-              },
-              child: Container(
-                height: 200,
-                width: double.infinity,
-                color: Colors.white,
-                padding: const EdgeInsets.all(30),
-                child: Column(
-                  children: [
-                    Text(
-                      halls[1].name,
-                      style: const TextStyle(fontSize: buttonFontSize),
-                    ),
-                    Text((halls[1].dailyRating > 0)
-                        ? stars[halls[1].dailyRating.round()]
-                        : 'No Reviews Yet'),
-                  ],
-                ),
-              ),
-            ),
+                onTap: () {
+                  chosenHall = halls[1];
+                  Navigator.pushNamed(context, '/food');
+                },
+                child: homeBlock(halls[1], 0xFFEFEFEF)),
             GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/food');
-              },
-              child: Container(
-                height: 200,
-                width: double.infinity,
-                color: Colors.white,
-                padding: const EdgeInsets.all(30),
-                child: Column(
-                  children: [
-                    Text(
-                      halls[2].name,
-                      style: const TextStyle(fontSize: buttonFontSize),
-                    ),
-                    Text((halls[2].dailyRating > 0)
-                        ? stars[halls[2].dailyRating.round()]
-                        : 'No Reviews Yet'),
-                  ],
-                ),
-              ),
-            ),
+                onTap: () {
+                  chosenHall = halls[2];
+                  Navigator.pushNamed(context, '/food');
+                },
+                child: homeBlock(halls[2], 0xFFD6D6D6)),
             GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/food');
-              },
-              child: Container(
-                height: 200,
-                width: double.infinity,
-                color: Colors.white,
-                padding: const EdgeInsets.all(30),
-                child: Column(
-                  children: [
-                    Text(
-                      halls[3].name,
-                      style: const TextStyle(fontSize: buttonFontSize),
-                    ),
-                    Text((halls[3].dailyRating > 0)
-                        ? stars[halls[3].dailyRating.round()]
-                        : 'No Reviews Yet'),
-                  ],
-                ),
-              ),
-            ),
+                onTap: () {
+                  chosenHall = halls[3];
+                  Navigator.pushNamed(context, '/food');
+                },
+                child: homeBlock(halls[3], 0xFFC4C4C4)),
           ],
         ),
         Align(
@@ -196,6 +154,7 @@ class FoodRoute extends StatelessWidget {
         title: const Text("Food Route"),
         backgroundColor: const Color(0xFF2F80EC),
       ),
+      body: Text(chosenHall.name),
     );
   }
 }
@@ -231,12 +190,11 @@ class HelpRoute extends StatelessWidget {
           child: Container(
               margin: EdgeInsets.only(left: 0, top: 0, right: 250, bottom: 680),
               child: Text('About us:', style: TextStyle(fontSize: 35))),
-              // Column(
-              //   children: const [
-              //     Text('Fuck off')
-              //   ]
+          // Column(
+          //   children: const [
+          //     Text('Fuck off')
+          //   ]
 
-          
           //key: Text('This app was created by berkely students who are to lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Jameson Crate, and Jorge-Luis Gonzalez')
         ));
 
