@@ -178,16 +178,34 @@ class ReviewRoute extends StatelessWidget {
   }
 }
 
+// Help and About Route
 class HelpRoute extends StatelessWidget {
   const HelpRoute({Key? key}) : super(key: key);
+  
+  Null get data => null;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Help Route"),
-        backgroundColor: const Color(0xFF2F80EC),
-      ),
-    );
+        appBar: AppBar(
+          title: const Text("Help Route"),
+          backgroundColor: const Color(0xFF2F80EC),
+        ),
+        body: Center(
+          child: Container(
+            margin: EdgeInsets.only(left: 40, top:0, right: 40, bottom:600),
+            
+            child: Text('About us, this app was created by berkely students who are to lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Jameson Crate, and Jorge-Luis Gonzalez', 
+                        style: TextStyle(fontSize: 18))
+            
+            ),
+          )
+
+            
+            //style: const TextStyle(fontSize: buttonFontSize),
+
+        )
+      );
   }
+  
 }
