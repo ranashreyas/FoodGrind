@@ -101,11 +101,18 @@ class HomeRoute extends StatelessWidget {
               child: Container(
                 height: 200,
                 width: double.infinity,
-                color: const Color(0xFFEFEFEF),
+                color: Colors.white,
                 padding: const EdgeInsets.all(30),
-                child: Text(
-                  halls[1].name,
-                  style: const TextStyle(fontSize: buttonFontSize),
+                child: Column(
+                  children: [
+                    Text(
+                      halls[1].name,
+                      style: const TextStyle(fontSize: buttonFontSize),
+                    ),
+                    Text((halls[1].dailyRating > 0)
+                        ? stars[halls[1].dailyRating.round()]
+                        : 'No Reviews Yet'),
+                  ],
                 ),
               ),
             ),
@@ -116,11 +123,18 @@ class HomeRoute extends StatelessWidget {
               child: Container(
                 height: 200,
                 width: double.infinity,
-                color: const Color(0xFFD6D6D6),
+                color: Colors.white,
                 padding: const EdgeInsets.all(30),
-                child: Text(
-                  halls[2].name,
-                  style: const TextStyle(fontSize: buttonFontSize),
+                child: Column(
+                  children: [
+                    Text(
+                      halls[2].name,
+                      style: const TextStyle(fontSize: buttonFontSize),
+                    ),
+                    Text((halls[2].dailyRating > 0)
+                        ? stars[halls[2].dailyRating.round()]
+                        : 'No Reviews Yet'),
+                  ],
                 ),
               ),
             ),
@@ -131,11 +145,18 @@ class HomeRoute extends StatelessWidget {
               child: Container(
                 height: 200,
                 width: double.infinity,
-                color: const Color(0xFFC4C4C4),
+                color: Colors.white,
                 padding: const EdgeInsets.all(30),
-                child: Text(
-                  halls[3].name,
-                  style: const TextStyle(fontSize: buttonFontSize),
+                child: Column(
+                  children: [
+                    Text(
+                      halls[3].name,
+                      style: const TextStyle(fontSize: buttonFontSize),
+                    ),
+                    Text((halls[3].dailyRating > 0)
+                        ? stars[halls[3].dailyRating.round()]
+                        : 'No Reviews Yet'),
+                  ],
                 ),
               ),
             ),
