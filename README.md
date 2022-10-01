@@ -1,16 +1,43 @@
 # foodgrind
 
-A new Flutter project.
+An app that puts all of the information about Berkeley Dining halls in one place 
+and allows students to rate different Dining halls every day.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+<---- Objects ---->
 
-A few resources to get you started if this is your first Flutter project:
+class Food {
+  late String name;
+  late String image;
+  late Map nutFacts;
+  late List labels;
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+  Food(this.name, this.image);
+}
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+class DiningHall {
+  late String name;
+  late String image;
+  late double allRating;
+  late double dailyRating;
+  late List menu;
+  late List location;
+  late String direction;
+
+  DiningHall(this.name, this.image, this.location, this.direction);
+
+  double getDistance(List currLocation) {
+    assert(currLocation.length == 2);
+    return sqrt(pow((location[0] - currLocation[0]), 2) +
+        pow((location[1] - currLocation[1]), 2));
+  }
+}
+
+class Review {
+  late double rating;
+  late List meal;
+  late String comment;
+
+  Review(this.rating, this.meal, this.comment);
+}
