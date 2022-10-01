@@ -14,7 +14,7 @@ class DiningHall {
   late String image;
   late double allRating;
   late List menu;
-  double dailyRating = 0;
+  double dailyRating = 5;
 
   DiningHall(this.name, this.image);
 
@@ -81,16 +81,23 @@ class HomeRoute extends StatelessWidget {
                 width: double.infinity,
                 color: Colors.white,
                 padding: const EdgeInsets.all(30),
-                child: Column(
-                  children: [
-                    Text(
-                      halls[0].name,
-                      style: const TextStyle(fontSize: buttonFontSize),
-                    ),
-                    Text((halls[0].dailyRating > 0)
-                        ? stars[halls[0].dailyRating.round()]
-                        : 'No Reviews Yet'),
-                  ],
+                child: Align(
+                  alignment: const Alignment(-1, 0),
+                  child: Column(
+                    children: [
+                      Text(
+                        halls[0].name,
+                        style: const TextStyle(fontSize: buttonFontSize),
+                      ),
+                      Text(
+                        (halls[0].dailyRating > 0)
+                            ? stars[halls[0].dailyRating.round() - 1]
+                            : 'No Reviews Yet',
+                        style: const TextStyle(
+                            color: Colors.yellow, fontSize: buttonFontSize),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -210,31 +217,29 @@ class ReviewRoute extends StatelessWidget {
 // Help and About Route
 class HelpRoute extends StatelessWidget {
   const HelpRoute({Key? key}) : super(key: key);
-  
+
   Null get data => null;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Help Route"),
-          backgroundColor: const Color(0xFF2F80EC),
-        ),
-        body: Center(
-          child: Container(
-            margin: EdgeInsets.only(left: 40, top:0, right: 40, bottom:600),
-            
-            child: Text('About us, this app was created by berkely students who are to lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Jameson Crate, and Jorge-Luis Gonzalez', 
-                        style: TextStyle(fontSize: 18))
-            
-            ),
-          )
+      appBar: AppBar(
+        title: const Text("Help Route"),
+        backgroundColor: const Color(0xFF2F80EC),
+      ),
+      // body: Center(
+      //   child: Container(
+      //     margin: EdgeInsets.only(left: 40, top:0, right: 40, bottom:600),
 
-            
-            //style: const TextStyle(fontSize: buttonFontSize),
+      //     child: Text('About us, this app was created by berkely students who are to lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Jameson Crate, and Jorge-Luis Gonzalez',
+      //                 style: TextStyle(fontSize: 18))
 
-        )
-      );
+      //     ),
+      //   )
+
+      //     //style: const TextStyle(fontSize: buttonFontSize),
+
+      // )
+    );
   }
-  
 }
