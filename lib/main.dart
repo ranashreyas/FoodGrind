@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Food {
@@ -14,17 +13,19 @@ class DiningHall {
   late String name;
   late String image;
   late double allRating;
-  late double dailyRating;
   late List menu;
-  late List location;
-  late String direction;
+  double dailyRating = -1.0;
 
-  DiningHall(this.name, this.image, this.location, this.direction);
+  DiningHall(this.name, this.image);
 
-  double getDistance(List currLocation) {
-    assert(currLocation.length == 2);
-    return sqrt(pow((location[0] - currLocation[0]), 2) +
-        pow((location[1] - currLocation[1]), 2));
+  double getDaily() {
+    // STILL NEEDS TO BE IMPLEMENTED
+    return 0;
+  }
+
+  double getTotal() {
+    // STILL NEEDS TO BE IMPLEMENTED
+    return 0;
   }
 }
 
@@ -35,6 +36,13 @@ class Review {
 
   Review(this.rating, this.meal, this.comment);
 }
+
+var cafeThree = DiningHall('Cafe 3', '');
+var clarkKerr = DiningHall('Clark Kerr', '');
+var foothill = DiningHall('Foothill', '');
+var crossroads = DiningHall('Crossroads', '');
+
+List<DiningHall> halls = [clarkKerr, cafeThree, foothill, crossroads];
 
 void main() {
   runApp(MaterialApp(
@@ -72,9 +80,9 @@ class HomeRoute extends StatelessWidget {
                 width: double.infinity,
                 color: Colors.white,
                 padding: const EdgeInsets.all(30),
-                child: const Text(
-                  'Cafe 3',
-                  style: TextStyle(fontSize: buttonFontSize),
+                child: Text(
+                  halls[0].name,
+                  style: const TextStyle(fontSize: buttonFontSize),
                 ),
               ),
             ),
@@ -87,9 +95,9 @@ class HomeRoute extends StatelessWidget {
                 width: double.infinity,
                 color: const Color(0xFFEFEFEF),
                 padding: const EdgeInsets.all(30),
-                child: const Text(
-                  'Crossroads',
-                  style: TextStyle(fontSize: buttonFontSize),
+                child: Text(
+                  halls[1].name,
+                  style: const TextStyle(fontSize: buttonFontSize),
                 ),
               ),
             ),
@@ -102,9 +110,9 @@ class HomeRoute extends StatelessWidget {
                 width: double.infinity,
                 color: const Color(0xFFD6D6D6),
                 padding: const EdgeInsets.all(30),
-                child: const Text(
-                  'Foothill',
-                  style: TextStyle(fontSize: buttonFontSize),
+                child: Text(
+                  halls[2].name,
+                  style: const TextStyle(fontSize: buttonFontSize),
                 ),
               ),
             ),
@@ -117,9 +125,9 @@ class HomeRoute extends StatelessWidget {
                 width: double.infinity,
                 color: const Color(0xFFC4C4C4),
                 padding: const EdgeInsets.all(30),
-                child: const Text(
-                  'Clark Kerr',
-                  style: TextStyle(fontSize: buttonFontSize),
+                child: Text(
+                  halls[3].name,
+                  style: const TextStyle(fontSize: buttonFontSize),
                 ),
               ),
             ),
