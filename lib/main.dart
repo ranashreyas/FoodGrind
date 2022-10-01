@@ -14,7 +14,7 @@ class DiningHall {
   late String image;
   late double allRating;
   late List menu;
-  double dailyRating = -1.0;
+  double dailyRating = 0;
 
   DiningHall(this.name, this.image);
 
@@ -43,6 +43,7 @@ var foothill = DiningHall('Foothill', '');
 var crossroads = DiningHall('Crossroads', '');
 
 List<DiningHall> halls = [clarkKerr, cafeThree, foothill, crossroads];
+List<String> stars = ['★', '★★', '★★★', '★★★★', '★★★★★'];
 
 void main() {
   runApp(MaterialApp(
@@ -80,9 +81,16 @@ class HomeRoute extends StatelessWidget {
                 width: double.infinity,
                 color: Colors.white,
                 padding: const EdgeInsets.all(30),
-                child: Text(
-                  halls[0].name,
-                  style: const TextStyle(fontSize: buttonFontSize),
+                child: Column(
+                  children: [
+                    Text(
+                      halls[0].name,
+                      style: const TextStyle(fontSize: buttonFontSize),
+                    ),
+                    Text((halls[0].dailyRating > 0)
+                        ? stars[halls[0].dailyRating.round()]
+                        : 'No Reviews Yet'),
+                  ],
                 ),
               ),
             ),
