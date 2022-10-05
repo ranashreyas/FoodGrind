@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class Food {
@@ -18,8 +17,9 @@ class DiningHall {
   late String image;
   late double allRating;
   late List menu;
-  bool isOpen = rng.nextBool();
-  int dailyRating = rng.nextInt(5)+1;
+  bool isOpen = true;
+  int dailyRating = 0;
+  late List openTimes;
 
   DiningHall(this.name, this.image);
 
@@ -63,7 +63,7 @@ List<DiningHall> sortHalls(List<DiningHall> options) {
   return openHalls + closedHalls;
 }
 
-String dailyQuote = 'Shit\'s gas, on god fr';
+String dailyQuote = 'Be the first one to leave a comment today!';
 
 DiningHall chosenHall = cafeThree;
 
@@ -94,7 +94,7 @@ class HomeRoute extends StatelessWidget {
       return Container(
         height: 175,
         width: double.infinity,
-        color: Color(chosenColor),
+        color: Colors.white,
         padding: const EdgeInsets.all(30),
         child: Column(
           children: [
@@ -131,7 +131,11 @@ class HomeRoute extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFC4C4C4),
       appBar: AppBar(
-        title: const Text('FoodGrind'),
+        title: const Text(
+          'FoodGrind',
+          style: TextStyle(fontSize: 30),
+        ),
+        toolbarHeight: 25,
         backgroundColor: const Color(0xFF2F80EC),
         shadowColor: const Color(0x00FFFFFF),
       ),
@@ -140,7 +144,7 @@ class HomeRoute extends StatelessWidget {
           children: <Widget>[
             Container(
               color: const Color(0xFF2F80EC),
-              height: 75,
+              height: 60,
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
               child: Center(
@@ -193,6 +197,7 @@ class HomeRoute extends StatelessWidget {
   }
 }
 
+// Route to
 class FoodRoute extends StatelessWidget {
   const FoodRoute({Key? key}) : super(key: key);
 
@@ -208,6 +213,7 @@ class FoodRoute extends StatelessWidget {
   }
 }
 
+// Route to leave reviews
 class ReviewRoute extends StatelessWidget {
   const ReviewRoute({Key? key}) : super(key: key);
 
