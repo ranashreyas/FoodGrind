@@ -213,7 +213,8 @@ class ReviewRoute extends StatelessWidget {
 class HelpRoute extends StatelessWidget {
   const HelpRoute({Key? key}) : super(key: key);
 
-  Null get data => null;
+  // ignore: avoid_returning_null_for_void
+  void get data => null;
 
   @override
   Widget build(BuildContext context) {
@@ -223,20 +224,25 @@ class HelpRoute extends StatelessWidget {
           backgroundColor: const Color(0xFF2F80EC),
         ),
         body: Center(
-          child: Container(
-              margin: const EdgeInsets.only(left: 0, top: 0, right: 250, bottom: 680),
-              child: const Text('About us:', style: TextStyle(fontSize: 35))),
-          // Column(
-          //   children: const [
-          //     Text('Fuck off')
-          //   ]
+            child: Container(
+                margin: const EdgeInsets.only(
+                    left: 0, top: 0, right: 250, bottom: 680),
+                child: const Text(
+                    'About us: This app was created by berkely students who are to lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Jameson Crate, and Jorge-Luis Gonzalez)',
+                    style: TextStyle(fontSize: 15)))
+            //   Column(
+            //     children:
+            //       const [
+            //       Text('Fuck off')
+            //     ]
 
-          //key: Text('This app was created by berkely students who are to lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Jameson Crate, and Jorge-Luis Gonzalez')
-        ));
+            //   key: Text('This app was created by berkely students who are to lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Jameson Crate, and Jorge-Luis Gonzalez')
+            // ));
 
-    //style: const TextStyle(fontSize: buttonFontSize),
+            //style: const TextStyle(fontSize: buttonFontSize),
+            ));
   }
-}
+  }
 
 class Food {
   late String name, image;
