@@ -177,7 +177,7 @@ class FoodRoute extends StatelessWidget {
       appBar: AppBar(
         title: Text(chosenHall.name),
         titleTextStyle: const TextStyle(fontSize: 30),
-        backgroundColor: const Color(0xFF2F80EC),
+        backgroundColor: const Color.fromARGB(255, 83, 83, 83),
       ),
       body: SingleChildScrollView(
           child: Column(children: [
@@ -203,7 +203,7 @@ class ReviewRoute extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Review Route"),
-        backgroundColor: const Color(0xFF2F80EC),
+        backgroundColor: const Color.fromARGB(255, 83, 83, 83),
       ),
     );
   }
@@ -221,7 +221,7 @@ class HelpRoute extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           title: const Text("Help Route"),
-          backgroundColor: const Color(0xFF2F80EC),
+          backgroundColor: const Color.fromARGB(255, 83, 83, 83),
         ),
         body: Center(
             child: Container(
