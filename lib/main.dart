@@ -4,15 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(MaterialApp(
-    initialRoute: '/',
-    routes: {
-      '/': (context) => const HomeRoute(),
-      '/food': (context) => const FoodRoute(),
-      '/review': (context) => const ReviewRoute(),
-      '/help': (context) => const HelpRoute(),
-    },
-  ));
+  runApp(
+    MaterialApp(
+      initialRoute: '/food',
+      routes: {
+        '/home': (context) => const HomeRoute(),
+        '/food': (context) => const FoodRoute(),
+        '/review': (context) => const ReviewRoute(),
+        '/help': (context) => const HelpRoute(),
+      },
+    ),
+  );
 }
 
 class HomeRoute extends StatefulWidget {
@@ -37,16 +39,18 @@ class _HomeRouteState extends State<HomeRoute> {
   @override
   Widget build(BuildContext context) {
     const double nameButtonFontSize = 30;
-    const double openButtonFontSize = 25;
+    const double openButtonFontSize = 20;
     Widget homeBlock(DiningHall hall, int chosenColor) {
       return Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(width: 2.0, color: Color.fromARGB(255, 83, 83, 83)),
+        margin: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: const Color.fromARGB(255, 83, 83, 83),
           ),
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
           color: Colors.white,
         ),
-        height: 170,
+        height: 160,
         width: double.infinity,
         padding: const EdgeInsets.all(30),
         child: Column(
@@ -84,7 +88,7 @@ class _HomeRouteState extends State<HomeRoute> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 240, 239, 239),
       appBar: AppBar(
         title: const Text(
           'FoodGrind',
@@ -109,29 +113,33 @@ class _HomeRouteState extends State<HomeRoute> {
               ),
             ),
             GestureDetector(
-                onTap: () {
-                  chosenHall = halls[0];
-                  Navigator.pushNamed(context, '/food');
-                },
-                child: homeBlock(halls[0], 0xFFFFFFFF)),
+              onTap: () {
+                chosenHall = halls[0];
+                Navigator.pushNamed(context, '/food');
+              },
+              child: homeBlock(halls[0], 0xFFFFFFFF),
+            ),
             GestureDetector(
-                onTap: () {
-                  chosenHall = halls[1];
-                  Navigator.pushNamed(context, '/food');
-                },
-                child: homeBlock(halls[1], 0xFFEFEFEF)),
+              onTap: () {
+                chosenHall = halls[1];
+                Navigator.pushNamed(context, '/food');
+              },
+              child: homeBlock(halls[1], 0xFFEFEFEF),
+            ),
             GestureDetector(
-                onTap: () {
-                  chosenHall = halls[2];
-                  Navigator.pushNamed(context, '/food');
-                },
-                child: homeBlock(halls[2], 0xFFD6D6D6)),
+              onTap: () {
+                chosenHall = halls[2];
+                Navigator.pushNamed(context, '/food');
+              },
+              child: homeBlock(halls[2], 0xFFD6D6D6),
+            ),
             GestureDetector(
-                onTap: () {
-                  chosenHall = halls[3];
-                  Navigator.pushNamed(context, '/food');
-                },
-                child: homeBlock(halls[3], 0xFFC4C4C4)),
+              onTap: () {
+                chosenHall = halls[3];
+                Navigator.pushNamed(context, '/food');
+              },
+              child: homeBlock(halls[3], 0xFFC4C4C4),
+            ),
           ],
         ),
         Align(
@@ -152,26 +160,45 @@ class _HomeRouteState extends State<HomeRoute> {
 }
 
 // Route to Specific Dining Hall
-class FoodRoute extends StatelessWidget {
+class FoodRoute extends StatefulWidget {
   const FoodRoute({Key? key}) : super(key: key);
+
+  @override
+  // ignore: library_private_types_in_public_api
+  State<FoodRoute> createState() => _FoodRouteState();
+}
+
+class _FoodRouteState extends State<FoodRoute> {
+  late List<Widget> foodWidgets;
 
   @override
   Widget build(BuildContext context) {
     Widget foodBlock(Food currFood) {
-      return Container(
-        height: 200,
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            top: BorderSide(width: 2.0, color: Color.fromARGB(255, 83, 83, 83)),
+      return GestureDetector(
+        // ignore: avoid_print
+        onTap: () => print(foodWidgets),
+        child: Container(
+          height: 200,
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(
+                width: 2.0,
+                color: Color.fromARGB(255, 83, 83, 83),
+              ),
+            ),
           ),
-        ),
-        child: Center(
-          child: Text(currFood.name),
+          child: Center(
+            child: Text(currFood.name),
+          ),
         ),
       );
     }
+
+    foodWidgets = <Widget>[
+      for (Food foodItem in chosenHall.menu) foodBlock(foodItem)
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -180,16 +207,8 @@ class FoodRoute extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 83, 83, 83),
       ),
       body: SingleChildScrollView(
-          child: Column(children: [
-        foodBlock(pizza),
-        foodBlock(pizza),
-        foodBlock(pizza),
-        foodBlock(pizza),
-        foodBlock(pizza),
-        foodBlock(pizza),
-        foodBlock(pizza),
-        foodBlock(pizza),
-      ])),
+        child: Column(children: foodWidgets),
+      ),
     );
   }
 }
@@ -242,7 +261,7 @@ class HelpRoute extends StatelessWidget {
             //style: const TextStyle(fontSize: buttonFontSize),
             ));
   }
-  }
+}
 
 class Food {
   late String name, image;
@@ -258,7 +277,7 @@ class DiningHall {
   late List menu, openTimes = [[], [], [], [], [], []];
   late bool isOpen = false;
 
-  DiningHall(this.name, this.image);
+  DiningHall(this.name, this.image, this.menu);
 }
 
 class Review {
@@ -268,11 +287,6 @@ class Review {
 
   Review(this.location, this.rating, this.meal, this.comment);
 }
-
-DiningHall cafeThree = DiningHall('Cafe 3', '');
-DiningHall clarkKerr = DiningHall('Clark Kerr', '');
-DiningHall foothill = DiningHall('Foothill', '');
-DiningHall crossroads = DiningHall('Crossroads', '');
 
 List<DiningHall> sortHalls(List<DiningHall> options) {
   List<DiningHall> openHalls = [];
@@ -300,4 +314,15 @@ List<String> stars = ['★', '★★', '★★★', '★★★★', '★★★�
 Food pizza = Food(
     'Pizza', '', {'Protein': '10g', 'Sugar': '23g'}, ['Vegan', 'Non-Dairy']);
 
-List<Food> foodList = [pizza, pizza, pizza, pizza, pizza];
+Food burger = Food(
+    'Burger', '', {'Protein': '10g', 'Sugar': '23g'}, ['Vegan', 'Non-Dairy']);
+
+List<Food> foodList0 = [pizza, burger];
+List<Food> foodList1 = [burger, burger, burger];
+List<Food> foodList2 = [pizza, burger, pizza];
+List<Food> foodList3 = [pizza];
+
+DiningHall cafeThree = DiningHall('Cafe 3', '', foodList0);
+DiningHall clarkKerr = DiningHall('Clark Kerr', '', foodList1);
+DiningHall foothill = DiningHall('Foothill', '', foodList2);
+DiningHall crossroads = DiningHall('Crossroads', '', foodList3);
