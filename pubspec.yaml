@@ -30,6 +30,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   http:
+  flutter_rating_bar:
   flutter:
     sdk: flutter
 
