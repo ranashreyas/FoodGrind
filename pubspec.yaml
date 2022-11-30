@@ -32,6 +32,10 @@ dependencies:
   http:
   flutter_rating_bar:
   loading_animation_widget:
+  device_info:
+  device_info_plus:
+  platform_device_id:
+  shared_preferences:
   flutter:
     sdk: flutter
 
