@@ -44,71 +44,38 @@ class _LoadingRouteState extends State<LoadingRoute> {
 
   getCafeData() async {
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefs = await SharedPreferences.getInstance(); // Handles first install, send to database
     bool? firstTime = prefs.getBool('first_time');
+    if (firstTime != null && !firstTime) {// Not first time
 
-    // final queryParameters = {
-    //   'userId': 'one'
-    // };
-    // final uri =
-    // Uri.https('www.myurl.com', '/postId/', queryParameters);
-    // final response = await http.get(uri, headers: {
-    //   HttpHeaders.authorizationHeader: 'Token',
-    //   HttpHeaders.contentTypeHeader: 'application/json',
-    // });
+    } else {// First time
+      print("First Install");
+      prefs.setBool('first_time', false);
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      String? id;
+      if (Platform.isAndroid) {
+        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+        id = androidInfo.id;
+      } else if (Platform.isIOS) {
+        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+        id = iosInfo.identifierForVendor;
+      }
 
-    final http.Response response = await http.post(
-      Uri.parse('https://food-grind.herokuapp.com/postId/'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'userId': "djfskdjhflsjhds",
-      }),
-    );
+      final http.Response response = await http.post(
+        Uri.parse('https://food-grind.herokuapp.com/postId/'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'userId': id!,
+        }),
+      );
+      print('Status code: ${response.statusCode}');
+      // print('Body: ${response.body}');
+    }
 
-    // var map = new Map<String, dynamic>();
-    // map['userId'] = '43';
-    // http.Response response = await http.post(
-    //   uri,
-    //   body: map,
-    // );
+    prefs.setBool('first_time', true);
 
-    // final uri = Uri.parse('https://food-grind.herokuapp.com/postId/');
-    // final response = await http.post(uri, body: {"userId": "43"});
-    print('Status code: ${response.statusCode}');
-    print('Body: ${response.body}');
-
-
-    // if (firstTime != null && !firstTime) {// Not first time
-    //
-    // } else {// First time
-    //   prefs.setBool('first_time', false);
-    //   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    //   String? id;
-    //   if (Platform.isAndroid) {
-    //     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    //     id = androidInfo.id;
-    //     final url = Uri.parse('https://food-grind.herokuapp.com/postId');
-    //     final headers = {"Content-type": "application/json"};
-    //     final json = '{"userId": $id}';
-    //     final response = await post(url, headers: headers, body: json);
-    //     print('Status code: ${response.statusCode}');
-    //     print('Body: ${response.body}');
-    //
-    //   } else if (Platform.isIOS) {
-    //     IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    //     id = iosInfo.identifierForVendor;
-    //     final url = Uri.parse('https://food-grind.herokuapp.com/postRating');
-    //     final headers = {"Content-type": "application/json"};
-    //     final json = '{"userId": $id}';
-    //     final response = await post(url, headers: headers, body: json);
-    //     print('Status code: ${response.statusCode}');
-    //     print('Body: ${response.body}');
-    //   }
-    //
-    //   // TODO push id for first time
-    // }
 
     //Resets everything
     diningHallMenus = [[],[],[],[]];
@@ -149,17 +116,27 @@ class _LoadingRouteState extends State<LoadingRoute> {
     var allFoodResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllNuts/'));
     var allTodaysFoodResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllFoods/'));
     var allTimesResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllTimesnZones/'));
-    // var allFoodRatingsResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/ratings/')); ///TODO Implement Ratings
+    var allFoodRatingsResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllRatings/'));
     // var allFoodReviewsResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/reviews/')); ///TODO Implement Reviews
     var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
     var allTodaysFood = jsonDecode(allTodaysFoodResponse.body);
     var openTimes = jsonDecode(allTimesResponse.body)['times']; ///TODO Implement open times
-    // var allFoodRatings = jsonDecode(allFoodRatingsResponse.body)['ratings'] ///TODO Implement Ratings List
+    var allFoodRatings = jsonDecode(allFoodRatingsResponse.body)['AllRatings'];
     // var allFoodReviews = jsonDecode(allFoodRatingsResponse.body)['reviews'] ///TODO Implement Reviews List
+
+
+
 
     for (var k in allFood.keys){
       // allFoodMap[k] = Food(k, '', allFood[k], [], allFoodRatings[k]['SumReviews'], allFoodRatings[k]['NumReviews'], allFoodReviews[k]); ///TODO Implement, replace next line
-      allFoodMap[k] = Food(k, '', allFood[k], [], 7, 2, [{"Rating": 5.0,"Review": "It was ok","Time": 123456},{"Rating": 2.0,"Review": "It was bad","Time": 223456}]); //this.name, this.image, this.nutFacts, this.labels, this.sumRatings, this.numRatings
+      allFoodMap[k] = Food(
+          k, //Food name
+          '', //image???
+          allFood[k], //nutrition facts
+          [], //tags???
+          (double.parse(allFoodRatings[k][0])*int.parse(allFoodRatings[k][1])).round(), //sum ratings
+          int.parse(allFoodRatings[k][1]), // num ratings
+          []); // reviews
     }
 
     for (var i = 0; i < allTodaysFood['AllFoods'].length; i++){
@@ -172,7 +149,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
           unsortedHalls[i].numRatings += foodNumRating;
         } else { // If this is a special menu item or something, and its nutritional facts do not exist
           print(f);
-          diningHallMenus[i].add(Food(f, '', ["Not Available"], [], 5, 1, [{"Rating": 5.0,"Review": "Glad it is back","Time": 123456},{"Rating": 2.0,"Review": "Why was it brought back?","Time": 223456}]));
+          diningHallMenus[i].add(Food(f, '', ["Not Available"], [], 5, 1, []));
           unsortedHalls[i].sumRatings += 5;
           unsortedHalls[i].numRatings += 1;
         }
@@ -371,15 +348,6 @@ class _FoodRouteState extends State<FoodRoute> {
     return "hello";
   }
 
-  // Future<void> makePostRequest(String? deviceId, double rating, Food currFood) async {
-  //   final url = Uri.parse('https://food-grind.herokuapp.com/postRating');
-  //   final headers = {"Content-type": "application/json"};
-  //   final json = '{"userId": $deviceId, "postRating": ${rating.toString()}, "location": ${chosenHall.name}, "food": ${currFood.name}, "timePosted", ${DateTime.now().millisecondsSinceEpoch/86400000}}';
-  //   final response = await post(url, headers: headers, body: json);
-  //   print('Status code: ${response.statusCode}');
-  //   print('Body: ${response.body}');
-  // }
-
   @override
   Widget build(BuildContext context) {
     const double menuItemFontSize = 20;
@@ -483,8 +451,6 @@ class _FoodRouteState extends State<FoodRoute> {
       );
     }
 
-
-
     showModalBottomSheet(context: context, builder: (BuildContext bc){
       return SizedBox(
         height: MediaQuery.of(context).size.height*.8,
@@ -554,17 +520,25 @@ class _FoodRouteState extends State<FoodRoute> {
                 child: ElevatedButton(
                   onPressed: () async {
                     String? deviceId = await _getId();
-                    print("DeviceID: $deviceId, Current Dining Hall: ${chosenHall.name} Current Food: ${currFood.name}, Stars: $rating, Time Posted: ${DateTime.now().millisecondsSinceEpoch/86400000}");
+                    var ratingToPost = jsonEncode(<String, String>{
+                      "userId": deviceId!,
+                      "rating": rating.toString(),
+                      "location": chosenHall.name,
+                      "food": currFood.name,
+                      "timePosted": (DateTime.now().millisecondsSinceEpoch/86400000).toString()
+                    });
+                    // print(ratingToPost);
 
-                    final url = Uri.parse('https://food-grind.herokuapp.com/postRating');
-                    final headers = {"Content-type": "application/json"};
-                    final json = '{"userId": $deviceId, "rating": ${rating.toString()}, "location": ${chosenHall.name}, "food": ${currFood.name}, "timePosted", ${DateTime.now().millisecondsSinceEpoch/86400000}}';
-                    final response = await post(url, headers: headers, body: json);
-                    print('Status code: ${response.statusCode}');
-                    print('Body: ${response.body}');
-
-                    // makePostRequest(deviceId, rating, currFood);
+                    final http.Response response = await http.post(
+                      Uri.parse('https://food-grind.herokuapp.com/postRating/'),
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                      },
+                      body: ratingToPost,
+                    );
+                    print(response.body);
                     // if (_reviewKey.currentState!.validate()) {} ///TODO add back for Reviews
+                    Navigator.pop(context);
                   },
                   child: const Text('Submit'),
                 )
