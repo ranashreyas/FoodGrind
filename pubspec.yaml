@@ -36,6 +36,7 @@ dependencies:
   device_info_plus:
   platform_device_id:
   shared_preferences:
+  intl:
   flutter:
     sdk: flutter
 

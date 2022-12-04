@@ -10,6 +10,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 // import 'package:platform_device_id/platform_device_id.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 
 void main() {
@@ -44,124 +45,139 @@ class _LoadingRouteState extends State<LoadingRoute> {
 
   getCafeData() async {
 
-    SharedPreferences prefs = await SharedPreferences.getInstance(); // Handles first install, send to database
-    bool? firstTime = prefs.getBool('first_time');
-    if (firstTime != null && !firstTime) {// Not first time
-
-    } else {// First time
-      print("First Install");
-      prefs.setBool('first_time', false);
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      String? id;
-      if (Platform.isAndroid) {
-        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-        id = androidInfo.id;
-      } else if (Platform.isIOS) {
-        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-        id = iosInfo.identifierForVendor;
-      }
-
-      final http.Response response = await http.post(
-        Uri.parse('https://food-grind.herokuapp.com/postId/'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'userId': id!,
-        }),
-      );
-      print('Status code: ${response.statusCode}');
-      // print('Body: ${response.body}');
-    }
-
-    prefs.setBool('first_time', true);
-
-
     //Resets everything
     diningHallMenus = [[],[],[],[]];
     unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
     halls = [];
     allFoodMap = {};
+    dailyQuote = 'Be the first one to leave a comment today!';
 
-    // {
-    //   'ratings':{
-    //     "Apple Pie": {
-    //       "SumReviews": 68,
-    //       "NumReviews": 17
-    //     }
-    //     ....
-    //   }
-    // }
-
-    // {
-    //   'reviews': {
-    //     "Apple Pie": [
-    //       {
-    //         "Rating": 5,
-    //         "Review": "It was ok",
-    //         "Time": 123456 //ms since epoch
-    //       },
-    //       {
-    //         "Rating": 2,
-    //         "Review": "It was bad",
-    //         "Time": 123456
-    //       }
-    //       ....
-    //     ]
-    //     ....
-    //   }
-    // }
-
-
-    var allFoodResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllNuts/'));
-    var allTodaysFoodResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllFoods/'));
-    var allTimesResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllTimesnZones/'));
-    var allFoodRatingsResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/getAllRatings/'));
-    // var allFoodReviewsResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/reviews/')); ///TODO Implement Reviews
-    var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
-    var allTodaysFood = jsonDecode(allTodaysFoodResponse.body);
-    var openTimes = jsonDecode(allTimesResponse.body)['times']; ///TODO Implement open times
-    var allFoodRatings = jsonDecode(allFoodRatingsResponse.body)['AllRatings'];
-    // var allFoodReviews = jsonDecode(allFoodRatingsResponse.body)['reviews'] ///TODO Implement Reviews List
-
-
-
-
-    for (var k in allFood.keys){
-      // allFoodMap[k] = Food(k, '', allFood[k], [], allFoodRatings[k]['SumReviews'], allFoodRatings[k]['NumReviews'], allFoodReviews[k]); ///TODO Implement, replace next line
-      allFoodMap[k] = Food(
-          k, //Food name
-          '', //image???
-          allFood[k], //nutrition facts
-          [], //tags???
-          (double.parse(allFoodRatings[k][0])*int.parse(allFoodRatings[k][1])).round(), //sum ratings
-          int.parse(allFoodRatings[k][1]), // num ratings
-          []); // reviews
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('kk:mm').format(now);
+    int minPassedInDay = int.parse(formattedDate.split(':')[0])*60 + int.parse(formattedDate.split(':')[1]);
+    // print(minPassedInDay);
+    if(minPassedInDay > 1260){
+      hallFoodStateString = 'CLOSED';
+      hallFoodState = 2;
+    } else if(minPassedInDay > 990){
+      hallFoodStateString = 'DINNER';
+      hallFoodState = 2;
+    } else if(minPassedInDay > 930){
+      hallFoodStateString = 'CLOSED';
+      hallFoodState = 2;
+    } else if(minPassedInDay > 660){
+      hallFoodStateString = 'LUNCH';
+      hallFoodState = 1;
+    } else if(minPassedInDay > 600){
+      hallFoodStateString = 'CLOSED';
+      hallFoodState = 1;
+    } else if(minPassedInDay > 450){
+      hallFoodStateString = 'BREAKFAST';
+      hallFoodState = 0;
+    } else {
+      hallFoodStateString = 'CLOSED';
+      hallFoodState = 0;
     }
+    print(hallFoodStateString);
 
-    for (var i = 0; i < allTodaysFood['AllFoods'].length; i++){
-      for (var f in allTodaysFood['AllFoods'][i][0]){ //change index 0, 1, 2 for b, l, d
-        if(allFoodMap[f] != null){
-          diningHallMenus[i].add(allFoodMap[f]);
-          int foodSumRating = allFoodMap[f].sumRatings;
-          int foodNumRating = allFoodMap[f].numRatings;
-          unsortedHalls[i].sumRatings += foodSumRating;
-          unsortedHalls[i].numRatings += foodNumRating;
-        } else { // If this is a special menu item or something, and its nutritional facts do not exist
-          print(f);
-          diningHallMenus[i].add(Food(f, '', ["Not Available"], [], 5, 1, []));
-          unsortedHalls[i].sumRatings += 5;
-          unsortedHalls[i].numRatings += 1;
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance(); // Handles first install, send to database
+      bool? firstTime = prefs.getBool('first_time');
+
+      if (firstTime != null && !firstTime) {// Not first time
+
+      } else {// First time
+        print("First Install");
+        prefs.setBool('first_time', false);
+        DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+        String? id;
+        if (Platform.isAndroid) {
+          AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+          id = androidInfo.id;
+        } else if (Platform.isIOS) {
+          IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+          id = iosInfo.identifierForVendor;
+        }
+
+        final http.Response response = await http.post(
+          Uri.parse('https://food-grind.herokuapp.com/postId/'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'userId': id!,
+          }),
+        );
+        print('Status code: ${response.statusCode}');
+        // print('Body: ${response.body}');
+      }
+
+      var allFoodResponse = await http.get(
+          Uri.parse('https://food-grind.herokuapp.com/getAllNuts/'));
+      var allTodaysFoodResponse = await http.get(
+          Uri.parse('https://food-grind.herokuapp.com/getAllFoods/'));
+      var allTimesResponse = await http.get(
+          Uri.parse('https://food-grind.herokuapp.com/getAllTimesnZones/'));
+      var allFoodRatingsResponse = await http.get(
+          Uri.parse('https://food-grind.herokuapp.com/getAllRatings/'));
+      // var allFoodReviewsResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/reviews/')); ///TODO Implement Reviews
+      var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
+      var allTodaysFood = jsonDecode(allTodaysFoodResponse.body);
+      var openTimes = jsonDecode(allTimesResponse.body)['times'];
+
+      ///TODO Implement open times
+      var allFoodRatings = jsonDecode(
+          allFoodRatingsResponse.body)['AllRatings'];
+      // var allFoodReviews = jsonDecode(allFoodRatingsResponse.body)['reviews'] ///TODO Implement Reviews List
+
+      for (var k in allFood.keys) {
+        // allFoodMap[k] = Food(k, '', allFood[k], [], allFoodRatings[k]['SumReviews'], allFoodRatings[k]['NumReviews'], allFoodReviews[k]); ///TODO Implement, replace next line
+        allFoodMap[k] = Food(
+            k,//Food name
+            '',//image???
+            allFood[k],//nutrition facts
+            [], //tags???
+            (double.parse(allFoodRatings[k][0]) *
+                int.parse(allFoodRatings[k][1])).round(),//sum ratings
+            int.parse(allFoodRatings[k][1]),// num ratings
+            []); // reviews
+      }
+
+      for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
+        for (var f in allTodaysFood['AllFoods'][i][hallFoodState]) { //change index 0, 1, 2 for b, l, d
+          if (allFoodMap[f] != null) {
+            diningHallMenus[i].add(allFoodMap[f]);
+            int foodSumRating = allFoodMap[f].sumRatings;
+            int foodNumRating = allFoodMap[f].numRatings;
+            unsortedHalls[i].sumRatings += foodSumRating;
+            unsortedHalls[i].numRatings += foodNumRating;
+          } else { // If this is a special menu item or something, and its nutritional facts do not exist
+            print(f);
+            diningHallMenus[i].add(Food(
+                f,
+                '',
+                ["Not Available"],
+                [],
+                5,
+                1,
+                []));
+            unsortedHalls[i].sumRatings += 5;
+            unsortedHalls[i].numRatings += 1;
+          }
         }
       }
+
+      halls = sortHalls(unsortedHalls);
+    } catch (e){
+      halls = sortHalls(unsortedHalls);
+      dailyQuote = "API Error! Today's food not updated!";
+      setState(() {
+        Navigator.pushNamed(context, routeAfterLoad);
+      });
     }
 
-    halls = sortHalls(unsortedHalls);
 
 
-    setState(() {
-      Navigator.pushNamed(context, routeAfterLoad);
-    });
   }
 
   @override
@@ -243,11 +259,11 @@ class _HomeRouteState extends State<HomeRoute> {
               Container(
                 margin: const EdgeInsets.only(top: 5),
                 alignment: const Alignment(-1, 0),
-                child: Text((hall.isOpen) ? 'OPEN' : 'CLOSED',
+                child: Text('$hallFoodStateString',
                     style: TextStyle(
                         fontSize: openButtonFontSize,
                         fontWeight: FontWeight.w700,
-                        color: (hall.isOpen) ? Colors.green : Colors.red)),
+                        color: (hallFoodStateString.compareTo('CLOSED') != 0) ? Colors.green : Colors.red)),
               ),
             ],
           ),
@@ -591,8 +607,8 @@ class Food {
 
 class DiningHall {
   late String name, image;
-  late int sumRatings = 0;
-  late int numRatings = 0;
+  late int sumRatings = 5;
+  late int numRatings = 1;
   late List menu, openTimes = [[], [], [], [], [], []];
   late bool isOpen = (name == "Crossroads")?false:true;
 
@@ -618,8 +634,8 @@ List<DiningHall> sortHalls(List<DiningHall> options) {
       closedHalls.add(h);
     }
   }
-  closedHalls.sort((a, b) => (b.sumRatings/b.numRatings).compareTo(a.sumRatings/a.numRatings));
-  openHalls.sort((a, b) => (b.sumRatings/b.numRatings).compareTo(a.sumRatings/a.numRatings));
+  closedHalls.sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
+  openHalls.sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
   return openHalls + closedHalls;
 }
 
@@ -627,6 +643,8 @@ String dailyQuote = 'Be the first one to leave a comment today!';
 String routeAfterLoad = '/home';
 
 DiningHall chosenHall = cafeThree;
+String hallFoodStateString = '-';
+int hallFoodState = 0;
 
 List<DiningHall> unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
 List<DiningHall> halls = [];
