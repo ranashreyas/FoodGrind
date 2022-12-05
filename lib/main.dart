@@ -60,22 +60,22 @@ class _LoadingRouteState extends State<LoadingRoute> {
       hallFoodStateString = 'CLOSED';
       hallFoodState = 2;
     } else if(minPassedInDay > 990){
-      hallFoodStateString = 'DINNER';
+      hallFoodStateString = 'DINNER: 4:30 p.m. - 9:00 p.m.';
       hallFoodState = 2;
     } else if(minPassedInDay > 930){
-      hallFoodStateString = 'CLOSED';
+      hallFoodStateString = 'CLOSED till 4:30 p.m.';
       hallFoodState = 2;
     } else if(minPassedInDay > 660){
-      hallFoodStateString = 'LUNCH';
+      hallFoodStateString = 'LUNCH: 11:00 a.m. - 3:00 p.m.';
       hallFoodState = 1;
     } else if(minPassedInDay > 600){
-      hallFoodStateString = 'CLOSED';
+      hallFoodStateString = 'CLOSED till 11:00 a.m.';
       hallFoodState = 1;
     } else if(minPassedInDay > 450){
-      hallFoodStateString = 'BREAKFAST';
+      hallFoodStateString = 'BREAKFAST: 7:30 a.m. - 10:00 a.m.';
       hallFoodState = 0;
     } else {
-      hallFoodStateString = 'CLOSED';
+      hallFoodStateString = 'CLOSED till 7:30 a.m.';
       hallFoodState = 0;
     }
     print(hallFoodStateString);
@@ -100,7 +100,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
         }
 
         final http.Response response = await http.post(
-          Uri.parse('https://food-grind.herokuapp.com/postId/'),
+          Uri.parse('https://foodgrindapi.herokuapp.com/postId/'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -113,14 +113,14 @@ class _LoadingRouteState extends State<LoadingRoute> {
       }
 
       var allFoodResponse = await http.get(
-          Uri.parse('https://food-grind.herokuapp.com/getAllNuts/'));
+          Uri.parse('https://foodgrindapi.herokuapp.com/getAllNuts/'));
       var allTodaysFoodResponse = await http.get(
-          Uri.parse('https://food-grind.herokuapp.com/getAllFoods/'));
+          Uri.parse('https://foodgrindapi.herokuapp.com/getAllFoods/'));
       var allTimesResponse = await http.get(
-          Uri.parse('https://food-grind.herokuapp.com/getAllTimesnZones/'));
+          Uri.parse('https://foodgrindapi.herokuapp.com/getAllTimesnZones/'));
       var allFoodRatingsResponse = await http.get(
-          Uri.parse('https://food-grind.herokuapp.com/getAllRatings/'));
-      // var allFoodReviewsResponse = await http.get(Uri.parse('https://food-grind.herokuapp.com/reviews/')); ///TODO Implement Reviews
+          Uri.parse('https://foodgrindapi.herokuapp.com/getAllRatings/'));
+      // var allFoodReviewsResponse = await http.get(Uri.parse('https://foodgrindapi.herokuapp.com/reviews/')); ///TODO Implement Reviews
       var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
       var allTodaysFood = jsonDecode(allTodaysFoodResponse.body);
       var openTimes = jsonDecode(allTimesResponse.body)['times'];
@@ -147,6 +147,9 @@ class _LoadingRouteState extends State<LoadingRoute> {
         for (var f in allTodaysFood['AllFoods'][i][hallFoodState]) { //change index 0, 1, 2 for b, l, d
           if (allFoodMap[f] != null) {
             diningHallMenus[i].add(allFoodMap[f]);
+
+            diningHallMenus[i].sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
+
             int foodSumRating = allFoodMap[f].sumRatings;
             int foodNumRating = allFoodMap[f].numRatings;
             unsortedHalls[i].sumRatings += foodSumRating;
@@ -156,7 +159,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
             diningHallMenus[i].add(Food(
                 f,
                 '',
-                ["Not Available"],
+                ["Nutrition Facts Not Available"],
                 [],
                 5,
                 1,
@@ -166,18 +169,46 @@ class _LoadingRouteState extends State<LoadingRoute> {
           }
         }
       }
+      // for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
+      //   diningHallMenus[i].sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
+      // }
+
 
       halls = sortHalls(unsortedHalls);
     } catch (e){
+      print(e);
+      int fakeSumRating = 9;
+      int fakeNumRatings = 2;
+      for(var i = 0; i < 4; i++){
+        diningHallMenus[i].add(Food(
+            "Failed API fetch",
+            '',
+            ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
+            [],
+            fakeSumRating,
+            fakeNumRatings,
+            [])
+        );
+        unsortedHalls[i].sumRatings += fakeSumRating;
+        unsortedHalls[i].numRatings += fakeNumRatings;
+        diningHallMenus[i].add(Food(
+            "Failed API fetch 2",
+            '',
+            ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
+            [],
+            fakeSumRating,
+            fakeNumRatings,
+            [])
+        );
+        unsortedHalls[i].sumRatings += fakeSumRating;
+        unsortedHalls[i].numRatings += fakeNumRatings;
+      }
       halls = sortHalls(unsortedHalls);
       dailyQuote = "API Error! Today's food not updated!";
-      setState(() {
-        Navigator.pushNamed(context, routeAfterLoad);
-      });
     }
-
-
-
+    setState(() {
+      Navigator.pushNamed(context, routeAfterLoad);
+    });
   }
 
   @override
@@ -230,10 +261,10 @@ class _HomeRouteState extends State<HomeRoute> {
 
     Widget homeBlock(DiningHall hall) {
       return Container(
-        margin: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(Radius.circular(20)),
-          color: Colors.grey[300],
+        margin: const EdgeInsets.only(left: 7, right: 7, top: 7),
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+          color: Colors.white,
         ),
         padding: const EdgeInsets.only(top: 25, left: 30, right: 30, bottom: 25),
         child: InkWell(
@@ -271,7 +302,6 @@ class _HomeRouteState extends State<HomeRoute> {
       );
     }
 
-
     hallWidgetList = <Widget>[
       for (DiningHall h in halls) homeBlock(h)
     ];
@@ -289,7 +319,7 @@ class _HomeRouteState extends State<HomeRoute> {
 
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 240, 239, 239),
+      backgroundColor: Colors.grey[200],
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
@@ -379,20 +409,20 @@ class _FoodRouteState extends State<FoodRoute> {
           _foodInfoModal(context, currFood, ratingsRow);
         },
         child: Container(
-          margin: const EdgeInsets.all(3),
+          margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
           padding: const EdgeInsets.only(left:20, right: 20, top: 7, bottom: 7),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             // border: Border.all(color: Colors.black),
-            borderRadius: const BorderRadius.all(Radius.circular(15)),
-            color: Colors.grey[300],
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            color: Colors.white,
           ),
           child: Row(
             children: <Widget>[
               Expanded(
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       // border: Border.all(color: Colors.black),
-                      color: Colors.grey[300],
+                      color: Colors.white,
                     ),
                     child: Text(currFood.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
                   )
@@ -401,7 +431,7 @@ class _FoodRouteState extends State<FoodRoute> {
                 child: Container(
                   decoration: BoxDecoration(
                     // border: Border.all(color: Colors.black),
-                    color: Colors.grey[300],
+                    color: Colors.white,
                   ),
                   child: Row(children: ratingsRow )
                   // Text("10 ${stars[currFood.historicalRating - 1]}", style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
@@ -418,6 +448,7 @@ class _FoodRouteState extends State<FoodRoute> {
     ];
 
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       appBar: AppBar(
         title: Text(chosenHall.name),
         titleTextStyle: const TextStyle(fontSize: 30),
@@ -546,12 +577,13 @@ class _FoodRouteState extends State<FoodRoute> {
                     // print(ratingToPost);
 
                     final http.Response response = await http.post(
-                      Uri.parse('https://food-grind.herokuapp.com/postRating/'),
+                      Uri.parse('https://foodgrindapi.herokuapp.com/postRating/'),
                       headers: <String, String>{
                         'Content-Type': 'application/json; charset=UTF-8',
                       },
                       body: ratingToPost,
                     );
+                    print(response.statusCode);
                     print(response.body);
                     // if (_reviewKey.currentState!.validate()) {} ///TODO add back for Reviews
                     Navigator.pop(context);
@@ -585,9 +617,16 @@ class HelpRoute extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 83, 83, 83),
       ),
       body: Container(
-        margin: const EdgeInsets.only(left: 20, right:20),
-        child: const Center(
-            child: Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina, Shreyas Rana, Jameson Crate, and Jorge-Luis Gonzalez.', style: TextStyle(fontSize: 15))
+        margin: const EdgeInsets.all(20),
+        child: Center(
+            child: Column(
+                children: [
+                  Image.asset('Assets/images/FOODGRIND.png', height: 283, width: 150),
+                  Container(height: 20,),
+                  Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina and Shreyas Rana, Jameson Crate, and Jorge-Luis Gonzalez.', style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w700), textAlign: TextAlign.center)
+                ],
+            )
         )
       )
     );
