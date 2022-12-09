@@ -17,6 +17,14 @@ void main() {
   runApp(
     MaterialApp(
       initialRoute: '/loading',
+      onGenerateRoute: (settings) {
+        if (settings.name == '/food') {
+          return PageRouteBuilder(
+            pageBuilder: (_, __, ___) => FoodRoute()
+          );
+        }
+        return null;
+      },
       routes: {
         '/loading': (context) => const LoadingRoute(),
         '/home': (context) => const HomeRoute(),
@@ -51,6 +59,8 @@ class _LoadingRouteState extends State<LoadingRoute> {
     halls = [];
     allFoodMap = {};
     dailyQuote = 'Be the first one to leave a comment today!';
+    // dropDownStates["PASTA"] = false;
+    // dropDownStates["OTHER"] = false;
 
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('kk:mm').format(now);
@@ -78,9 +88,9 @@ class _LoadingRouteState extends State<LoadingRoute> {
       hallFoodStateString = 'CLOSED till 7:30 a.m.';
       hallFoodState = 0;
     }
-    print(hallFoodStateString);
+    print("$hallFoodStateString $hallFoodState");
 
-    try {
+    // try {
       SharedPreferences prefs = await SharedPreferences.getInstance(); // Handles first install, send to database
       bool? firstTime = prefs.getBool('first_time');
 
@@ -130,25 +140,25 @@ class _LoadingRouteState extends State<LoadingRoute> {
           allFoodRatingsResponse.body)['AllRatings'];
       // var allFoodReviews = jsonDecode(allFoodRatingsResponse.body)['reviews'] ///TODO Implement Reviews List
 
-      for (var k in allFood.keys) {
+      for (var k in allFood.keys) { //Initializes complete dictionary of foods
         // allFoodMap[k] = Food(k, '', allFood[k], [], allFoodRatings[k]['SumReviews'], allFoodRatings[k]['NumReviews'], allFoodReviews[k]); ///TODO Implement, replace next line
         allFoodMap[k] = Food(
             k,//Food name
             '',//image???
             allFood[k],//nutrition facts
-            [], //tags???
-            (double.parse(allFoodRatings[k][0]) *
-                int.parse(allFoodRatings[k][1])).round(),//sum ratings
-            int.parse(allFoodRatings[k][1]),// num ratings
+            "pasta", //tags???
+            (allFoodRatings[k][1] == 0)? 5: (allFoodRatings[k][0] * allFoodRatings[k][1].toDouble()).round(),//sum ratings
+            (allFoodRatings[k][1] == 0)? 1: allFoodRatings[k][1],// num ratings
             []); // reviews
       }
 
       for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
+        // print(allTodaysFood['AllFoods'][i][hallFoodState]);
         for (var f in allTodaysFood['AllFoods'][i][hallFoodState]) { //change index 0, 1, 2 for b, l, d
           if (allFoodMap[f] != null) {
             diningHallMenus[i].add(allFoodMap[f]);
 
-            diningHallMenus[i].sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
+            diningHallMenus[i].sort((a, b) => (b.sumRatings~/(b.numRatings)).compareTo(a.sumRatings~/(a.numRatings)));
 
             int foodSumRating = allFoodMap[f].sumRatings;
             int foodNumRating = allFoodMap[f].numRatings;
@@ -160,7 +170,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
                 f,
                 '',
                 ["Nutrition Facts Not Available"],
-                [],
+                "other",
                 5,
                 1,
                 []));
@@ -175,37 +185,37 @@ class _LoadingRouteState extends State<LoadingRoute> {
 
 
       halls = sortHalls(unsortedHalls);
-    } catch (e){
-      print(e);
-      int fakeSumRating = 9;
-      int fakeNumRatings = 2;
-      for(var i = 0; i < 4; i++){
-        diningHallMenus[i].add(Food(
-            "Failed API fetch",
-            '',
-            ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
-            [],
-            fakeSumRating,
-            fakeNumRatings,
-            [])
-        );
-        unsortedHalls[i].sumRatings += fakeSumRating;
-        unsortedHalls[i].numRatings += fakeNumRatings;
-        diningHallMenus[i].add(Food(
-            "Failed API fetch 2",
-            '',
-            ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
-            [],
-            fakeSumRating,
-            fakeNumRatings,
-            [])
-        );
-        unsortedHalls[i].sumRatings += fakeSumRating;
-        unsortedHalls[i].numRatings += fakeNumRatings;
-      }
-      halls = sortHalls(unsortedHalls);
-      dailyQuote = "API Error! Today's food not updated!";
-    }
+    // } catch (e){
+    //   print(e);
+    //   int fakeSumRating = 9;
+    //   int fakeNumRatings = 2;
+    //   for(var i = 0; i < 4; i++){
+    //     diningHallMenus[i].add(Food(
+    //         "Failed API fetch",
+    //         '',
+    //         ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
+    //         "pasta",
+    //         fakeSumRating,
+    //         fakeNumRatings,
+    //         [])
+    //     );
+    //     unsortedHalls[i].sumRatings += fakeSumRating;
+    //     unsortedHalls[i].numRatings += fakeNumRatings;
+    //     diningHallMenus[i].add(Food(
+    //         "Failed API fetch 2",
+    //         '',
+    //         ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
+    //         "pasta",
+    //         fakeSumRating,
+    //         fakeNumRatings,
+    //         [])
+    //     );
+    //     unsortedHalls[i].sumRatings += fakeSumRating;
+    //     unsortedHalls[i].numRatings += fakeNumRatings;
+    //   }
+    //   halls = sortHalls(unsortedHalls);
+    //   dailyQuote = "API Error! Today's food not updated!";
+    // }
     setState(() {
       Navigator.pushNamed(context, routeAfterLoad);
     });
@@ -294,7 +304,7 @@ class _HomeRouteState extends State<HomeRoute> {
                     style: TextStyle(
                         fontSize: openButtonFontSize,
                         fontWeight: FontWeight.w700,
-                        color: (hallFoodStateString.compareTo('CLOSED') != 0) ? Colors.green : Colors.red)),
+                        color: (hallFoodStateString.contains('CLOSED')) ? Colors.red : Colors.green)),
               ),
             ],
           ),
@@ -363,7 +373,12 @@ class FoodRoute extends StatefulWidget {
 }
 
 class _FoodRouteState extends State<FoodRoute> {
-  late List<Widget> foodWidgets;
+  Map<String, bool> dropDownStates = {"PASTA": false, "OTHER": false};
+
+  late List<Widget> foodWidgets = [];
+  late List<Widget> pastaWidgets;
+  late List<Widget> otherWidgets;
+
   late List<Widget> reviewWidgets;
   final _reviewKey = GlobalKey<FormState>();
 
@@ -371,7 +386,6 @@ class _FoodRouteState extends State<FoodRoute> {
   void initState() {
     super.initState();
     print("${chosenHall.name}, ${chosenHall.sumRatings/chosenHall.numRatings}");
-    ratingsTemp = [];
   }
 
   Future onRefresh() async{
@@ -396,56 +410,122 @@ class _FoodRouteState extends State<FoodRoute> {
 
   @override
   Widget build(BuildContext context) {
-    const double menuItemFontSize = 20;
+    const double menuItemFontSize = 15;
+    const double dropdownFontSize = 25;
 
-    Widget foodBlock(Food currFood) {
-
-      List<Widget> ratingsRow = stars[(currFood.sumRatings/currFood.numRatings*2 - 1).round()]
+    Widget foodBlock(Food currFood, String tag) {
+      List<Widget> ratingsRow = stars[(currFood.sumRatings/(currFood.numRatings)*2 - 1).round()]
           .map((element)=>element).toList(); //Copies the map, not creates an instance
       ratingsRow.insert(ratingsRow.length, Text(currFood.numRatings.toString()) );
 
-      return GestureDetector(
-        onTap: (){
-          _foodInfoModal(context, currFood, ratingsRow);
-        },
-        child: Container(
-          margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
-          padding: const EdgeInsets.only(left:20, right: 20, top: 7, bottom: 7),
-          decoration: const BoxDecoration(
-            // border: Border.all(color: Colors.black),
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-            color: Colors.white,
-          ),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      // border: Border.all(color: Colors.black),
-                      color: Colors.white,
-                    ),
-                    child: Text(currFood.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
-                  )
-              ),
-              Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    // border: Border.all(color: Colors.black),
-                    color: Colors.white,
-                  ),
-                  child: Row(children: ratingsRow )
-                  // Text("10 ${stars[currFood.historicalRating - 1]}", style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
+      if(currFood.label.contains(tag)) {
+        return Container(
+            margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
+            padding: const EdgeInsets.only(
+                left: 20, right: 20, top: 7, bottom: 7),
+            decoration: const BoxDecoration(
+              // border: Border.all(color: Colors.black),
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+              color: Colors.white,
+            ),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        // border: Border.all(color: Colors.black),
+                        color: Colors.white,
+                      ),
+                      child: Text(
+                          currFood.name, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: menuItemFontSize,
+                              fontWeight: FontWeight.normal)),
+                    )
+                ),
+                IconButton(
+                  icon: const Icon(Icons.fastfood),
+                  color: Colors.black,
+                  onPressed: () {
+                    _foodNutFactsModal(context, currFood);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.rate_review),
+                  color: Colors.black,
+                  onPressed: () {
+                    _foodReviewModal(context, currFood, ratingsRow);
+                  },
+                ),
+                Center(
+                    child: Container(
+                        decoration: BoxDecoration(
+                          // border: Border.all(color: Colors.black),
+                          color: Colors.white,
+                        ),
+                        child: Row(children: ratingsRow)
+                      // Text("10 ${stars[currFood.historicalRating - 1]}", style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
+                    )
                 )
+              ],
+            )
+          );
+        } else {
+        return Container();
+      }
+    }
+    
+    Widget dropdownBlock(String category){
+      return GestureDetector(
+          onTap: () {
+            setState(() {
+              (dropDownStates[category]!)?(dropDownStates[category] = false):(dropDownStates[category] = true);
+              foodWidgets = [];
+              // Navigator.pushNamed(context, '/food');
+            });
+          },
+          child: Container(
+              margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
+              padding: const EdgeInsets.only(
+                  left: 20, right: 20, top: 20, bottom: 20),
+              decoration: BoxDecoration(
+                // border: Border.all(color: Colors.black),
+                borderRadius: BorderRadius.all(Radius.circular(5)),
+                color: Colors.grey[400],
+              ),
+              child: Row(
+                children: <Widget>[
+                  (dropDownStates[category]!)?Icon(Icons.keyboard_arrow_down):Icon(Icons.keyboard_arrow_up),
+                  Expanded(
+                      child: Container(
+                        decoration:  BoxDecoration(
+                          color: Colors.grey[400],
+                        ),
+                        child: Text(
+                            category.toUpperCase(), overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: dropdownFontSize,
+                                fontWeight: FontWeight.bold)),
+                      )
+                  ),
+                ],
               )
-            ],
           )
-        )
       );
     }
 
-    foodWidgets = <Widget>[
-      for (Food foodItem in chosenHall.menu) foodBlock(foodItem)
+    // foodWidgets = <Widget>[
+    //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem)
+    // ];
+    pastaWidgets = <Widget>[
+      for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "pasta")
     ];
+    otherWidgets = <Widget>[
+      for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "other")
+    ];
+    foodWidgets.add(dropdownBlock("PASTA"));
+    (dropDownStates['PASTA']!)?foodWidgets.addAll(pastaWidgets):foodWidgets.add(Container());
+    foodWidgets.add(dropdownBlock("OTHER"));
+    (dropDownStates['OTHER']!)?foodWidgets.addAll(otherWidgets):foodWidgets.add(Container());
+
 
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -467,7 +547,7 @@ class _FoodRouteState extends State<FoodRoute> {
     );
   }
 
-  void _foodInfoModal(context, Food currFood, List<Widget> ratingsRow) {
+  void _foodNutFactsModal(context, Food currFood) {
     const double nameFontSize = 25;
     const double nutritionFactsFontSize = 20;
     var simplifiedNutFacts = "";
@@ -475,27 +555,6 @@ class _FoodRouteState extends State<FoodRoute> {
 
     for (var f in currFood.nutFacts){
       simplifiedNutFacts += f + "\n";
-    }
-
-    Widget reviewBlock(var review){
-      return Container(
-        margin: const EdgeInsets.all(3),
-        padding: const EdgeInsets.only(left:20, right: 20, top: 10, bottom: 10),
-        decoration: BoxDecoration(
-          // border: Border.all(color: Colors.black),
-          borderRadius: const BorderRadius.all(Radius.circular(15)),
-          color: Colors.grey[300],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(children: stars[(review['Rating']*2-1).round()] ),
-            Text(review["Review"], overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: nutritionFactsFontSize, fontWeight: FontWeight.normal)),
-            Text(review["Time"].toString(), overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: nutritionFactsFontSize, fontWeight: FontWeight.normal)),
-          ],
-        )
-      );
     }
 
     showModalBottomSheet(context: context, builder: (BuildContext bc){
@@ -508,98 +567,141 @@ class _FoodRouteState extends State<FoodRoute> {
               child: Text(currFood.name, style: const TextStyle(
                   fontSize: nameFontSize, fontWeight: FontWeight.bold)),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(children: ratingsRow )
-            ),
+
             const Divider(height: 20,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(simplifiedNutFacts, style: const TextStyle(
                   fontSize: nutritionFactsFontSize, fontWeight: FontWeight.normal)),
             ),
-            const Divider(height: 10,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,),
-            // Form(
-            //   key: _reviewKey,
-            //   child: Column(
-            //     children: [
-            //       Padding(
-            //         padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
-            //         child: TextFormField(
-            //           decoration: const InputDecoration(
-            //             icon: Icon(Icons.comment),
-            //             labelText: 'Write a Review',
-            //           ),
-            //           validator: (value) {
-            //             ///TODO Implement Review database push
-            //             print("Review: ${value!}, Stars: $rating, Time Posted: ${DateTime.now().millisecondsSinceEpoch/86400000}");
-            //           },
-            //           keyboardType: TextInputType.multiline,
-            //           maxLines: null,
-            //         )
-            //       ),
-            //     ]
-            //   )
-            // ),
-
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                child: RatingBar.builder(
-                  initialRating: 3,
-                  minRating: 0.5,
-                  direction: Axis.horizontal,
-                  allowHalfRating: false,
-                  itemCount: 5,
-                  itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  itemBuilder: (context, _) => const Icon(
-                    Icons.star,
-                    color: Colors.amber,
-                  ),
-                  onRatingUpdate: (r) {
-                    rating = r;
-                  },
-                )
-              )
-            ),
-            Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    String? deviceId = await _getId();
-                    var ratingToPost = jsonEncode(<String, String>{
-                      "userId": deviceId!,
-                      "rating": rating.toString(),
-                      "location": chosenHall.name,
-                      "food": currFood.name,
-                      "timePosted": (DateTime.now().millisecondsSinceEpoch/86400000).toString()
-                    });
-                    // print(ratingToPost);
-
-                    final http.Response response = await http.post(
-                      Uri.parse('https://foodgrindapi.herokuapp.com/postRating/'),
-                      headers: <String, String>{
-                        'Content-Type': 'application/json; charset=UTF-8',
-                      },
-                      body: ratingToPost,
-                    );
-                    print(response.statusCode);
-                    print(response.body);
-                    // if (_reviewKey.currentState!.validate()) {} ///TODO add back for Reviews
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Submit'),
-                )
-            ),
-            // const Divider(height: 20,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,), ///TODO add back for Reviews
-            // const Padding(
-            //   padding: EdgeInsets.all(8.0),
-            //   child: Text("Reviews", style: TextStyle(
-            //       fontSize: nameFontSize, fontWeight: FontWeight.bold)),
-            // ),
-            // for (var review in currFood.reviews) reviewBlock(review)
           ],
         )
+      );
+    });
+  }
+
+  void _foodReviewModal(context, Food currFood, List<Widget> ratingsRow) {
+    const double nameFontSize = 25;
+    const double nutritionFactsFontSize = 20;
+    var rating = 3.0;
+
+    Widget reviewBlock(var review){
+      return Container(
+          margin: const EdgeInsets.all(3),
+          padding: const EdgeInsets.only(left:20, right: 20, top: 10, bottom: 10),
+          decoration: BoxDecoration(
+            // border: Border.all(color: Colors.black),
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+            color: Colors.grey[300],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(children: stars[(review['Rating']*2-1).round()] ),
+              Text(review["Review"], overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: nutritionFactsFontSize, fontWeight: FontWeight.normal)),
+              Text(review["Time"].toString(), overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: nutritionFactsFontSize, fontWeight: FontWeight.normal)),
+            ],
+          )
+      );
+    }
+
+    showModalBottomSheet(context: context, builder: (BuildContext bc){
+      return SizedBox(
+          height: MediaQuery.of(context).size.height*.8,
+          child: ListView(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(currFood.name, style: const TextStyle(
+                    fontSize: nameFontSize, fontWeight: FontWeight.bold)),
+              ),
+              Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(children: ratingsRow )
+              ),
+              const Divider(height: 10,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,),
+              Form(
+                key: _reviewKey,
+                child: Column(
+                  children: [
+                    // Padding(
+                    //   padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
+                    //   child: TextFormField(
+                    //     decoration: const InputDecoration(
+                    //       icon: Icon(Icons.comment),
+                    //       labelText: 'Write a Review',
+                    //     ),
+                    //     validator: (value) {
+                    //       ///TODO Implement Review database push
+                    //       print("Review: ${value!}, Stars: $rating, Time Posted: ${DateTime.now().millisecondsSinceEpoch/86400000}");
+                    //     },
+                    //     keyboardType: TextInputType.multiline,
+                    //     maxLines: null,
+                    //   )
+                    // ),
+                  ]
+                )
+              ),
+
+              Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Center(
+                      child: RatingBar.builder(
+                        initialRating: 3,
+                        minRating: 0.5,
+                        direction: Axis.horizontal,
+                        allowHalfRating: false,
+                        itemCount: 5,
+                        itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        itemBuilder: (context, _) => const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                        onRatingUpdate: (r) {
+                          rating = r;
+                        },
+                      )
+                  )
+              ),
+              Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      String? deviceId = await _getId();
+                      var ratingToPost = jsonEncode(<String, String>{
+                        "userId": deviceId!,
+                        "rating": rating.toString(),
+                        "location": chosenHall.name,
+                        "food": currFood.name,
+                        "timePosted": (DateTime.now().millisecondsSinceEpoch/86400000).toString()
+                      });
+                      // print(ratingToPost);
+
+                      final http.Response response = await http.post(
+                        Uri.parse('https://foodgrindapi.herokuapp.com/postRating/'),
+                        headers: <String, String>{
+                          'Content-Type': 'application/json; charset=UTF-8',
+                        },
+                        body: ratingToPost,
+                      );
+                      print(response.statusCode);
+                      print(response.body);
+                      // if (_reviewKey.currentState!.validate()) {} ///TODO add back for Reviews
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Submit'),
+                  )
+              ),
+              // const Divider(height: 20,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,), ///TODO add back for Reviews
+              // const Padding(
+              //   padding: EdgeInsets.all(8.0),
+              //   child: Text("Reviews", style: TextStyle(
+              //       fontSize: nameFontSize, fontWeight: FontWeight.bold)),
+              // ),
+              // for (var review in currFood.reviews) reviewBlock(review)
+            ],
+          )
       );
     });
   }
@@ -636,12 +738,12 @@ class HelpRoute extends StatelessWidget {
 class Food {
   late String name, image;
   late List nutFacts;
-  late List labels;
+  late String label;
   late int sumRatings = 0;
   late int numRatings = 0;
   late var reviews;
 
-  Food(this.name, this.image, this.nutFacts, this.labels, this.sumRatings, this.numRatings, this.reviews);
+  Food(this.name, this.image, this.nutFacts, this.label, this.sumRatings, this.numRatings, this.reviews);
 }
 
 class DiningHall {
@@ -708,6 +810,3 @@ DiningHall cafeThree = DiningHall('Cafe 3', '', diningHallMenus[0]);
 DiningHall clarkKerr = DiningHall('Clark Kerr', '', diningHallMenus[1]);
 DiningHall crossroads = DiningHall('Crossroads', '', diningHallMenus[2]);
 DiningHall foothill = DiningHall('Foothill', '', diningHallMenus[3]);
-
-List<List<Widget>> ratingsTemp = [];
-
