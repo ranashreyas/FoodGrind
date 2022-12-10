@@ -1,3 +1,27 @@
+// "Quinoa Pilaf": [
+//   "Calories (kcal): 214.73",
+//   "Total Lipid/Fat (g): 9.14",
+//   "Saturated fatty acid (g): 1.21",
+//   "Trans Fat (g): N/A",
+//   "Cholesterol (mg): 0",
+//   "Sodium (mg): 2.89",
+//   "Carbohydrate (g): 27.36",
+//   "Total Dietary Fiber (g): 3.02",
+//   "Sugar (g): 0.01",
+//   "Protein (g): 6.04",
+//   "Vitamin A (iu): 101.47",
+//   "Vitamin C (mg): 1.51",
+//   "Calcium (mg): 21.62",
+//   "Iron (mg): 2.05",
+//   "Water (g): 39.27",
+//   "Ash (g): 1.04",
+//   "Vitamin A (rae): N/A",
+//   "Potassium (mg): 245.69",
+//   "Vitamin D(iu): 0",
+//   "Carbon Footprint (kg CO2): 0.22",
+//   "Pasta, Dinner, Front plate, etc....."
+// ]
+
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io' show HttpHeaders, Platform;
@@ -13,18 +37,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
 
+
 void main() {
   runApp(
     MaterialApp(
       initialRoute: '/loading',
-      onGenerateRoute: (settings) {
-        if (settings.name == '/food') {
-          return PageRouteBuilder(
-            pageBuilder: (_, __, ___) => FoodRoute()
-          );
-        }
-        return null;
-      },
       routes: {
         '/loading': (context) => const LoadingRoute(),
         '/home': (context) => const HomeRoute(),
@@ -49,18 +66,17 @@ class _LoadingRouteState extends State<LoadingRoute> {
   void initState(){
     super.initState();
     getCafeData();
+
   }
 
-  getCafeData() async {
+  Future<void> getCafeData() async {
 
     //Resets everything
-    diningHallMenus = [[],[],[],[]];
+    diningHallMenus = [{}, {}, {}, {}];
     unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
     halls = [];
     allFoodMap = {};
     dailyQuote = 'Be the first one to leave a comment today!';
-    // dropDownStates["PASTA"] = false;
-    // dropDownStates["OTHER"] = false;
 
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('kk:mm').format(now);
@@ -90,14 +106,14 @@ class _LoadingRouteState extends State<LoadingRoute> {
     }
     print("$hallFoodStateString $hallFoodState");
 
-    // try {
+    try {
       SharedPreferences prefs = await SharedPreferences.getInstance(); // Handles first install, send to database
       bool? firstTime = prefs.getBool('first_time');
 
       if (firstTime != null && !firstTime) {// Not first time
 
       } else {// First time
-        print("First Install");
+        // print("First Install");
         prefs.setBool('first_time', false);
         DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
         String? id;
@@ -126,99 +142,119 @@ class _LoadingRouteState extends State<LoadingRoute> {
           Uri.parse('https://foodgrindapi.herokuapp.com/getAllNuts/'));
       var allTodaysFoodResponse = await http.get(
           Uri.parse('https://foodgrindapi.herokuapp.com/getAllFoods/'));
-      var allTimesResponse = await http.get(
-          Uri.parse('https://foodgrindapi.herokuapp.com/getAllTimesnZones/'));
+      // var allTimesResponse = await http.get(
+      //     Uri.parse('https://foodgrindapi.herokuapp.com/getAllTimesnZones/'));
       var allFoodRatingsResponse = await http.get(
           Uri.parse('https://foodgrindapi.herokuapp.com/getAllRatings/'));
       // var allFoodReviewsResponse = await http.get(Uri.parse('https://foodgrindapi.herokuapp.com/reviews/')); ///TODO Implement Reviews
+
+
       var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
       var allTodaysFood = jsonDecode(allTodaysFoodResponse.body);
-      var openTimes = jsonDecode(allTimesResponse.body)['times'];
+      // var openTimes = jsonDecode(allTimesResponse.body)['times'];
 
-      ///TODO Implement open times
+      // TODO comment out
+      // allTodaysFood = jsonDecode('{"AllFoods": [[{"eggs":["Scrambled Eggs","Scrambled Eggs and Mushrooms"],"stuff":["Polenta with Roasted Tomatoes and Mushrooms","Pan-fried Potatoes and Peppers","Steamed Cauliflower Florets","White Rice","Brown Rice"], "Bar": ["Rolled Oatmeal","Bagel Bar","Yogurt Parfait Bar","Assorted Mini Muffins","Assorted Mini Danishes"]}]]}');
+      // hallFoodState = 0;
+
       var allFoodRatings = jsonDecode(
           allFoodRatingsResponse.body)['AllRatings'];
       // var allFoodReviews = jsonDecode(allFoodRatingsResponse.body)['reviews'] ///TODO Implement Reviews List
 
       for (var k in allFood.keys) { //Initializes complete dictionary of foods
-        // allFoodMap[k] = Food(k, '', allFood[k], [], allFoodRatings[k]['SumReviews'], allFoodRatings[k]['NumReviews'], allFoodReviews[k]); ///TODO Implement, replace next line
+        print(allFoodRatings["Waffles"]);
+        List<Widget> reviewRow = stars[((allFoodRatings[k][0]>0)?allFoodRatings[k][0]*2 - 1:9).round()]
+            .map((element)=>element).toList(); //Copies the map, not creates an instance
+        reviewRow.insert(reviewRow.length, Text(((allFoodRatings[k][1]>0)?allFoodRatings[k][1]:1).toString()) );
+        // print(reviewRow);
+
         allFoodMap[k] = Food(
             k,//Food name
             '',//image???
             allFood[k],//nutrition facts
-            "pasta", //tags???
-            (allFoodRatings[k][1] == 0)? 5: (allFoodRatings[k][0] * allFoodRatings[k][1].toDouble()).round(),//sum ratings
-            (allFoodRatings[k][1] == 0)? 1: allFoodRatings[k][1],// num ratings
+            "", //tags???
+            (allFoodRatings.containsKey(k) && allFoodRatings[k][1] > 0)? (allFoodRatings[k][0] * allFoodRatings[k][1].toDouble()).round():5,//sum ratings
+            (allFoodRatings.containsKey(k) && allFoodRatings[k][1] > 0)? allFoodRatings[k][1]:1,// num ratings
+            reviewRow,
             []); // reviews
       }
 
       for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
         // print(allTodaysFood['AllFoods'][i][hallFoodState]);
-        for (var f in allTodaysFood['AllFoods'][i][hallFoodState]) { //change index 0, 1, 2 for b, l, d
-          if (allFoodMap[f] != null) {
-            diningHallMenus[i].add(allFoodMap[f]);
+        for (var k in allTodaysFood['AllFoods'][i][hallFoodState].keys) { //change index 0, 1, 2 for b, l, d
+          for(var f in allTodaysFood['AllFoods'][i][hallFoodState][k]){
+            if(!diningHallMenus[i].containsKey(k)){
+              diningHallMenus[i][k] = [];
+            }
+            if (allFoodMap[f] != null) {
+              print("something");
+              diningHallMenus[i][k]?.add(Food(allFoodMap[f].name, allFoodMap[f].image, allFoodMap[f].nutFacts, allFoodMap[f].label, allFoodMap[f].sumRatings, allFoodMap[f].numRatings, allFoodMap[f].reviewRow, allFoodMap[f].reviews));
 
-            diningHallMenus[i].sort((a, b) => (b.sumRatings~/(b.numRatings)).compareTo(a.sumRatings~/(a.numRatings)));
+              diningHallMenus[i][k]?.sort((a, b) => (b.sumRatings~/(b.numRatings)).compareTo(a.sumRatings~/(a.numRatings)));
 
-            int foodSumRating = allFoodMap[f].sumRatings;
-            int foodNumRating = allFoodMap[f].numRatings;
-            unsortedHalls[i].sumRatings += foodSumRating;
-            unsortedHalls[i].numRatings += foodNumRating;
-          } else { // If this is a special menu item or something, and its nutritional facts do not exist
-            print(f);
-            diningHallMenus[i].add(Food(
-                f,
-                '',
-                ["Nutrition Facts Not Available"],
-                "other",
-                5,
-                1,
-                []));
-            unsortedHalls[i].sumRatings += 5;
-            unsortedHalls[i].numRatings += 1;
+              int foodSumRating = allFoodMap[f].sumRatings;
+              int foodNumRating = allFoodMap[f].numRatings;
+              unsortedHalls[i].sumRatings += foodSumRating;
+              unsortedHalls[i].numRatings += foodNumRating;
+            } else { // If this is a special menu item or something, and its nutritional facts do not exist
+              print(f);
+              List<Widget> ratingsRow = stars[9]
+                  .map((element)=>element).toList(); //Copies the map, not creates an instance
+              ratingsRow.insert(ratingsRow.length, const Text("1"));
+
+              diningHallMenus[i][k]?.add(Food(
+                  f,
+                  '',
+                  ["Nutrition Facts Not Available"],
+                  "other",
+                  5,
+                  1,
+                  ratingsRow,
+                  []));
+              unsortedHalls[i].sumRatings += 5;
+              unsortedHalls[i].numRatings += 1;
+            }
           }
         }
       }
-      // for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
-      //   diningHallMenus[i].sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
-      // }
 
 
       halls = sortHalls(unsortedHalls);
-    // } catch (e){
-    //   print(e);
-    //   int fakeSumRating = 9;
-    //   int fakeNumRatings = 2;
-    //   for(var i = 0; i < 4; i++){
-    //     diningHallMenus[i].add(Food(
-    //         "Failed API fetch",
-    //         '',
-    //         ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
-    //         "pasta",
-    //         fakeSumRating,
-    //         fakeNumRatings,
-    //         [])
-    //     );
-    //     unsortedHalls[i].sumRatings += fakeSumRating;
-    //     unsortedHalls[i].numRatings += fakeNumRatings;
-    //     diningHallMenus[i].add(Food(
-    //         "Failed API fetch 2",
-    //         '',
-    //         ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
-    //         "pasta",
-    //         fakeSumRating,
-    //         fakeNumRatings,
-    //         [])
-    //     );
-    //     unsortedHalls[i].sumRatings += fakeSumRating;
-    //     unsortedHalls[i].numRatings += fakeNumRatings;
-    //   }
-    //   halls = sortHalls(unsortedHalls);
-    //   dailyQuote = "API Error! Today's food not updated!";
-    // }
-    setState(() {
-      Navigator.pushNamed(context, routeAfterLoad);
-    });
+    } catch (e){
+      print(e);
+      // int fakeSumRating = 9;
+      // int fakeNumRatings = 2;
+      // for(var i = 0; i < 4; i++){
+      //   diningHallMenus[i].add(Food(
+      //       "Failed API fetch",
+      //       '',
+      //       ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
+      //       "pasta",
+      //       fakeSumRating,
+      //       fakeNumRatings,
+      //       [])
+      //   );
+      //   unsortedHalls[i].sumRatings += fakeSumRating;
+      //   unsortedHalls[i].numRatings += fakeNumRatings;
+      //   diningHallMenus[i].add(Food(
+      //       "Failed API fetch 2",
+      //       '',
+      //       ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
+      //       "pasta",
+      //       fakeSumRating,
+      //       fakeNumRatings,
+      //       [])
+      //   );
+      //   unsortedHalls[i].sumRatings += fakeSumRating;
+      //   unsortedHalls[i].numRatings += fakeNumRatings;
+      // }
+      // halls = sortHalls(unsortedHalls);
+      dailyQuote = "API Error! Today's food not updated!";
+    }
+    return Future.delayed(const Duration(seconds: 2), () => setState(() {
+      Navigator.pushNamedAndRemoveUntil(context, routeAfterLoad, (route) => false);
+    }));
+
   }
 
   @override
@@ -260,8 +296,22 @@ class _HomeRouteState extends State<HomeRoute> {
   Future onRefresh() async{
     routeAfterLoad = '/home';
     setState(() {
-      Navigator.pushNamed(context, '/loading');
+      diningHallMenus = [{}, {}, {}, {}];
+      unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
+      halls = [];
+      allFoodMap = {};
+      dailyQuote = 'Be the first one to leave a comment today!';
+      Navigator.pushNamedAndRemoveUntil(context, '/loading', (route) => false);
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    // print(allFoodMap["Chicken Sandwich"].sumRatings);
+    // print(allFoodMap["Chicken Sandwich"].numRatings);
   }
 
   @override
@@ -373,11 +423,10 @@ class FoodRoute extends StatefulWidget {
 }
 
 class _FoodRouteState extends State<FoodRoute> {
-  Map<String, bool> dropDownStates = {"PASTA": false, "OTHER": false};
+  Map<String, bool> dropDownStates = {};
 
-  late List<Widget> foodWidgets = [];
-  late List<Widget> pastaWidgets;
-  late List<Widget> otherWidgets;
+  late List<Widget> entireDropdownWidgets = [];
+  late List<List<Widget>> stationWidgets;
 
   late List<Widget> reviewWidgets;
   final _reviewKey = GlobalKey<FormState>();
@@ -391,8 +440,16 @@ class _FoodRouteState extends State<FoodRoute> {
   Future onRefresh() async{
     routeAfterLoad = '/food';
     setState(() {
-      Navigator.pushNamed(context, '/loading');
+      diningHallMenus = [{}, {}, {}, {}];
+      unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
+      halls = [];
+      allFoodMap = {};
+      chosenHall = clarkKerr;
+      dailyQuote = 'Be the first one to leave a comment today!';
+      // Navigator.pushNamed(context, '/loading');
+      Navigator.pushNamedAndRemoveUntil(context, '/loading', (route) => false);
     });
+
   }
 
   Future<String?> _getId() async {
@@ -414,64 +471,112 @@ class _FoodRouteState extends State<FoodRoute> {
     const double dropdownFontSize = 25;
 
     Widget foodBlock(Food currFood, String tag) {
-      List<Widget> ratingsRow = stars[(currFood.sumRatings/(currFood.numRatings)*2 - 1).round()]
-          .map((element)=>element).toList(); //Copies the map, not creates an instance
-      ratingsRow.insert(ratingsRow.length, Text(currFood.numRatings.toString()) );
 
-      if(currFood.label.contains(tag)) {
-        return Container(
-            margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
-            padding: const EdgeInsets.only(
-                left: 20, right: 20, top: 7, bottom: 7),
-            decoration: const BoxDecoration(
-              // border: Border.all(color: Colors.black),
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-              color: Colors.white,
-            ),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
+      return Container(
+          margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
+          padding: const EdgeInsets.only(
+              left: 20, right: 20, top: 7, bottom: 7),
+          decoration: const BoxDecoration(
+            // border: Border.all(color: Colors.black),
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            color: Colors.white,
+          ),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      // border: Border.all(color: Colors.black),
+                      color: Colors.white,
+                    ),
+                    child: Text(
+                        currFood.name, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: menuItemFontSize,
+                            fontWeight: FontWeight.normal)),
+                  )
+              ),
+              IconButton(
+                icon: const Icon(Icons.fastfood),
+                color: Colors.black,
+                onPressed: () {
+                  _foodNutFactsModal(context, currFood);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.rate_review),
+                color: Colors.black,
+                onPressed: () {
+                  _foodReviewModal(context, currFood);
+                },
+              ),
+              Center(
+                  child: Container(
+                      decoration: const BoxDecoration(
                         // border: Border.all(color: Colors.black),
                         color: Colors.white,
                       ),
-                      child: Text(
-                          currFood.name, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: menuItemFontSize,
-                              fontWeight: FontWeight.normal)),
-                    )
-                ),
-                IconButton(
-                  icon: const Icon(Icons.fastfood),
-                  color: Colors.black,
-                  onPressed: () {
-                    _foodNutFactsModal(context, currFood);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.rate_review),
-                  color: Colors.black,
-                  onPressed: () {
-                    _foodReviewModal(context, currFood, ratingsRow);
-                  },
-                ),
-                Center(
-                    child: Container(
-                        decoration: BoxDecoration(
-                          // border: Border.all(color: Colors.black),
-                          color: Colors.white,
-                        ),
-                        child: Row(children: ratingsRow)
-                      // Text("10 ${stars[currFood.historicalRating - 1]}", style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
-                    )
-                )
-              ],
-            )
-          );
-        } else {
-        return Container();
-      }
+                      child: Row(children: currFood.reviewRow)
+                    // Text("10 ${stars[currFood.historicalRating - 1]}", style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
+                  )
+              )
+            ],
+          )
+      );
+
+      // if(currFood.label.contains(tag)) {
+      //   return Container(
+      //       margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
+      //       padding: const EdgeInsets.only(
+      //           left: 20, right: 20, top: 7, bottom: 7),
+      //       decoration: const BoxDecoration(
+      //         // border: Border.all(color: Colors.black),
+      //         borderRadius: BorderRadius.all(Radius.circular(5)),
+      //         color: Colors.white,
+      //       ),
+      //       child: Row(
+      //         children: <Widget>[
+      //           Expanded(
+      //               child: Container(
+      //                 decoration: const BoxDecoration(
+      //                   // border: Border.all(color: Colors.black),
+      //                   color: Colors.white,
+      //                 ),
+      //                 child: Text(
+      //                     currFood.name, overflow: TextOverflow.ellipsis,
+      //                     style: const TextStyle(fontSize: menuItemFontSize,
+      //                         fontWeight: FontWeight.normal)),
+      //               )
+      //           ),
+      //           IconButton(
+      //             icon: const Icon(Icons.fastfood),
+      //             color: Colors.black,
+      //             onPressed: () {
+      //               _foodNutFactsModal(context, currFood);
+      //             },
+      //           ),
+      //           IconButton(
+      //             icon: const Icon(Icons.rate_review),
+      //             color: Colors.black,
+      //             onPressed: () {
+      //               _foodReviewModal(context, currFood, ratingsRow);
+      //             },
+      //           ),
+      //           Center(
+      //               child: Container(
+      //                   decoration: const BoxDecoration(
+      //                     // border: Border.all(color: Colors.black),
+      //                     color: Colors.white,
+      //                   ),
+      //                   child: Row(children: ratingsRow)
+      //                 // Text("10 ${stars[currFood.historicalRating - 1]}", style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
+      //               )
+      //           )
+      //         ],
+      //       )
+      //     );
+      //   } else {
+      //   return Container();
+      // }
     }
     
     Widget dropdownBlock(String category){
@@ -479,7 +584,7 @@ class _FoodRouteState extends State<FoodRoute> {
           onTap: () {
             setState(() {
               (dropDownStates[category]!)?(dropDownStates[category] = false):(dropDownStates[category] = true);
-              foodWidgets = [];
+              entireDropdownWidgets = [];
               // Navigator.pushNamed(context, '/food');
             });
           },
@@ -489,12 +594,12 @@ class _FoodRouteState extends State<FoodRoute> {
                   left: 20, right: 20, top: 20, bottom: 20),
               decoration: BoxDecoration(
                 // border: Border.all(color: Colors.black),
-                borderRadius: BorderRadius.all(Radius.circular(5)),
+                borderRadius: const BorderRadius.all(Radius.circular(5)),
                 color: Colors.grey[400],
               ),
               child: Row(
                 children: <Widget>[
-                  (dropDownStates[category]!)?Icon(Icons.keyboard_arrow_down):Icon(Icons.keyboard_arrow_up),
+                  (dropDownStates[category]!)?const Icon(Icons.keyboard_arrow_down):const Icon(Icons.keyboard_arrow_up),
                   Expanded(
                       child: Container(
                         decoration:  BoxDecoration(
@@ -515,16 +620,30 @@ class _FoodRouteState extends State<FoodRoute> {
     // foodWidgets = <Widget>[
     //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem)
     // ];
-    pastaWidgets = <Widget>[
-      for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "pasta")
-    ];
-    otherWidgets = <Widget>[
-      for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "other")
-    ];
-    foodWidgets.add(dropdownBlock("PASTA"));
-    (dropDownStates['PASTA']!)?foodWidgets.addAll(pastaWidgets):foodWidgets.add(Container());
-    foodWidgets.add(dropdownBlock("OTHER"));
-    (dropDownStates['OTHER']!)?foodWidgets.addAll(otherWidgets):foodWidgets.add(Container());
+
+    print("building!");
+
+    for (var k in chosenHall.menu.keys){
+      if(!dropDownStates.containsKey(k)){
+        dropDownStates[k] = false;
+      }
+
+      entireDropdownWidgets.add(dropdownBlock(k)); // creates the dropdown block
+
+      (dropDownStates[k]!)?entireDropdownWidgets.addAll(<Widget>[ //adds the menu that should be shown or not
+        for (Food foodItem in chosenHall.menu[k]!) foodBlock(foodItem, k)
+      ]):entireDropdownWidgets.add(Container());
+    }
+    // pastaWidgets = <Widget>[
+    //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "pasta")
+    // ];
+    // otherWidgets = <Widget>[
+    //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "other")
+    // ];
+    // foodWidgets.add(dropdownBlock("PASTA"));
+    // (dropDownStates['PASTA']!)?foodWidgets.addAll(pastaWidgets):foodWidgets.add(Container());
+    // foodWidgets.add(dropdownBlock("OTHER"));
+    // (dropDownStates['OTHER']!)?foodWidgets.addAll(otherWidgets):foodWidgets.add(Container());
 
 
     return Scaffold(
@@ -542,7 +661,7 @@ class _FoodRouteState extends State<FoodRoute> {
       ),
       body: RefreshIndicator(
         onRefresh: onRefresh,
-        child: ListView(children: foodWidgets)
+        child: ListView(children: entireDropdownWidgets)
       )
     );
   }
@@ -580,7 +699,7 @@ class _FoodRouteState extends State<FoodRoute> {
     });
   }
 
-  void _foodReviewModal(context, Food currFood, List<Widget> ratingsRow) {
+  void _foodReviewModal(context, Food currFood) {
     const double nameFontSize = 25;
     const double nutritionFactsFontSize = 20;
     var rating = 3.0;
@@ -618,7 +737,7 @@ class _FoodRouteState extends State<FoodRoute> {
               ),
               Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Row(children: ratingsRow )
+                  child: Row(children: currFood.reviewRow )
               ),
               const Divider(height: 10,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,),
               Form(
@@ -725,7 +844,7 @@ class HelpRoute extends StatelessWidget {
                 children: [
                   Image.asset('Assets/images/FOODGRIND.png', height: 283, width: 150),
                   Container(height: 20,),
-                  Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina and Shreyas Rana, Jameson Crate, and Jorge-Luis Gonzalez.', style: const TextStyle(
+                  const Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina and Shreyas Rana.', style: TextStyle(
                       fontSize: 15, fontWeight: FontWeight.w700), textAlign: TextAlign.center)
                 ],
             )
@@ -742,15 +861,17 @@ class Food {
   late int sumRatings = 0;
   late int numRatings = 0;
   late var reviews;
+  late List<Widget> reviewRow;
 
-  Food(this.name, this.image, this.nutFacts, this.label, this.sumRatings, this.numRatings, this.reviews);
+  Food(this.name, this.image, this.nutFacts, this.label, this.sumRatings, this.numRatings, this.reviewRow, this.reviews);
 }
 
 class DiningHall {
   late String name, image;
   late int sumRatings = 5;
   late int numRatings = 1;
-  late List menu, openTimes = [[], [], [], [], [], []];
+  late Map<String, List<Food>> menu;
+  late List openTimes = [[], [], [], [], [], []];
   late bool isOpen = (name == "Crossroads")?false:true;
 
 
@@ -804,7 +925,7 @@ var stars = [
 
 Map allFoodMap = {};
 
-List<List<Food>> diningHallMenus = [[],[],[],[]];
+List<Map<String, List<Food>>> diningHallMenus = [{}, {}, {}, {}];
 
 DiningHall cafeThree = DiningHall('Cafe 3', '', diningHallMenus[0]);
 DiningHall clarkKerr = DiningHall('Clark Kerr', '', diningHallMenus[1]);
