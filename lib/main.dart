@@ -26,6 +26,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:io' show HttpHeaders, Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter_launcher_icons/utils.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -52,6 +53,9 @@ void main() {
   );
 }
 
+
+
+
 class LoadingRoute extends StatefulWidget {
   const LoadingRoute({Key? key}) : super(key: key);
 
@@ -72,11 +76,11 @@ class _LoadingRouteState extends State<LoadingRoute> {
   Future<void> getCafeData() async {
 
     //Resets everything
-    diningHallMenus = [{}, {}, {}, {}];
-    unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
-    halls = [];
-    allFoodMap = {};
-    dailyQuote = 'Be the first one to leave a comment today!';
+    // diningHallMenus = [{}, {}, {}, {}];
+    // unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
+    // halls = [];
+    // allFoodMap = {};
+    // dailyQuote = 'Be the first one to leave a comment today!';
 
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('kk:mm').format(now);
@@ -162,7 +166,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
       // var allFoodReviews = jsonDecode(allFoodRatingsResponse.body)['reviews'] ///TODO Implement Reviews List
 
       for (var k in allFood.keys) { //Initializes complete dictionary of foods
-        print(allFoodRatings["Waffles"]);
+
         List<Widget> reviewRow = stars[((allFoodRatings[k][0]>0)?allFoodRatings[k][0]*2 - 1:9).round()]
             .map((element)=>element).toList(); //Copies the map, not creates an instance
         reviewRow.insert(reviewRow.length, Text(((allFoodRatings[k][1]>0)?allFoodRatings[k][1]:1).toString()) );
@@ -179,6 +183,8 @@ class _LoadingRouteState extends State<LoadingRoute> {
             []); // reviews
       }
 
+      print(allFoodRatings["Waffles"]);
+      print(diningHallMenus);
       for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
         // print(allTodaysFood['AllFoods'][i][hallFoodState]);
         for (var k in allTodaysFood['AllFoods'][i][hallFoodState].keys) { //change index 0, 1, 2 for b, l, d
@@ -187,7 +193,6 @@ class _LoadingRouteState extends State<LoadingRoute> {
               diningHallMenus[i][k] = [];
             }
             if (allFoodMap[f] != null) {
-              print("something");
               diningHallMenus[i][k]?.add(Food(allFoodMap[f].name, allFoodMap[f].image, allFoodMap[f].nutFacts, allFoodMap[f].label, allFoodMap[f].sumRatings, allFoodMap[f].numRatings, allFoodMap[f].reviewRow, allFoodMap[f].reviews));
 
               diningHallMenus[i][k]?.sort((a, b) => (b.sumRatings~/(b.numRatings)).compareTo(a.sumRatings~/(a.numRatings)));
@@ -218,6 +223,10 @@ class _LoadingRouteState extends State<LoadingRoute> {
         }
       }
 
+      cafeThree.menu = diningHallMenus[0];
+      clarkKerr.menu = diningHallMenus[1];
+      crossroads.menu = diningHallMenus[2];
+      foothill.menu = diningHallMenus[3];
 
       halls = sortHalls(unsortedHalls);
     } catch (e){
@@ -423,6 +432,8 @@ class FoodRoute extends StatefulWidget {
 }
 
 class _FoodRouteState extends State<FoodRoute> {
+  late DiningHall chosenHallLocal;
+
   Map<String, bool> dropDownStates = {};
 
   late List<Widget> entireDropdownWidgets = [];
@@ -434,7 +445,6 @@ class _FoodRouteState extends State<FoodRoute> {
   @override
   void initState() {
     super.initState();
-    print("${chosenHall.name}, ${chosenHall.sumRatings/chosenHall.numRatings}");
   }
 
   Future onRefresh() async{
@@ -444,7 +454,6 @@ class _FoodRouteState extends State<FoodRoute> {
       unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
       halls = [];
       allFoodMap = {};
-      chosenHall = clarkKerr;
       dailyQuote = 'Be the first one to leave a comment today!';
       // Navigator.pushNamed(context, '/loading');
       Navigator.pushNamedAndRemoveUntil(context, '/loading', (route) => false);
@@ -471,7 +480,7 @@ class _FoodRouteState extends State<FoodRoute> {
     const double dropdownFontSize = 25;
 
     Widget foodBlock(Food currFood, String tag) {
-
+      // print(currFood.name + " " + currFood.reviewRow.toString());
       return Container(
           margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
           padding: const EdgeInsets.only(
@@ -621,7 +630,7 @@ class _FoodRouteState extends State<FoodRoute> {
     //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem)
     // ];
 
-    print("building!");
+    // print("building!");
 
     for (var k in chosenHall.menu.keys){
       if(!dropDownStates.containsKey(k)){
@@ -887,6 +896,7 @@ class Review {
 }
 
 List<DiningHall> sortHalls(List<DiningHall> options) {
+
   List<DiningHall> openHalls = [];
   List<DiningHall> closedHalls = [];
   for (DiningHall h in options) {
