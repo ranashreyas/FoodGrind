@@ -150,11 +150,13 @@ class _LoadingRouteState extends State<LoadingRoute> {
       //     Uri.parse('https://foodgrindapi.herokuapp.com/getAllTimesnZones/'));
       var allFoodRatingsResponse = await http.get(
           Uri.parse('https://foodgrindapi.herokuapp.com/getAllRatings/'));
+      var quoteOfDayResponse = await http.get(Uri.parse('https://foodgrindapi.herokuapp.com/getQODD/'));
       // var allFoodReviewsResponse = await http.get(Uri.parse('https://foodgrindapi.herokuapp.com/reviews/')); ///TODO Implement Reviews
 
 
       var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
       var allTodaysFood = jsonDecode(allTodaysFoodResponse.body);
+      dailyQuote = jsonDecode(quoteOfDayResponse.body)["QODD"];
       // var openTimes = jsonDecode(allTimesResponse.body)['times'];
 
       // TODO comment out
@@ -163,7 +165,6 @@ class _LoadingRouteState extends State<LoadingRoute> {
 
       var allFoodRatings = jsonDecode(
           allFoodRatingsResponse.body)['AllRatings'];
-      // var allFoodReviews = jsonDecode(allFoodRatingsResponse.body)['reviews'] ///TODO Implement Reviews List
 
       for (var k in allFood.keys) { //Initializes complete dictionary of foods
 
@@ -231,33 +232,6 @@ class _LoadingRouteState extends State<LoadingRoute> {
       halls = sortHalls(unsortedHalls);
     } catch (e){
       print(e);
-      // int fakeSumRating = 9;
-      // int fakeNumRatings = 2;
-      // for(var i = 0; i < 4; i++){
-      //   diningHallMenus[i].add(Food(
-      //       "Failed API fetch",
-      //       '',
-      //       ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
-      //       "pasta",
-      //       fakeSumRating,
-      //       fakeNumRatings,
-      //       [])
-      //   );
-      //   unsortedHalls[i].sumRatings += fakeSumRating;
-      //   unsortedHalls[i].numRatings += fakeNumRatings;
-      //   diningHallMenus[i].add(Food(
-      //       "Failed API fetch 2",
-      //       '',
-      //       ["Test1", "Test2", "Test3", "Nutfact 1", "NutFact 2"],
-      //       "pasta",
-      //       fakeSumRating,
-      //       fakeNumRatings,
-      //       [])
-      //   );
-      //   unsortedHalls[i].sumRatings += fakeSumRating;
-      //   unsortedHalls[i].numRatings += fakeNumRatings;
-      // }
-      // halls = sortHalls(unsortedHalls);
       dailyQuote = "API Error! Today's food not updated!";
     }
     return Future.delayed(const Duration(seconds: 2), () => setState(() {
@@ -375,13 +349,13 @@ class _HomeRouteState extends State<HomeRoute> {
       for (DiningHall h in halls) homeBlock(h)
     ];
     hallWidgetList.insert(0, Container(
-      color: const Color.fromRGBO(46, 43, 43, 1),
+      color: Colors.grey[800],
       height: 60,
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+      padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
       child: Text(
         dailyQuote,
-        style: const TextStyle(fontSize: 20, color: Colors.white),
+        style: const TextStyle(fontSize: 15, color: Colors.white),
         textAlign: TextAlign.center,
       ),
     ));
@@ -440,7 +414,7 @@ class _FoodRouteState extends State<FoodRoute> {
   late List<List<Widget>> stationWidgets;
 
   late List<Widget> reviewWidgets;
-  final _reviewKey = GlobalKey<FormState>();
+  final _quoteKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -712,6 +686,8 @@ class _FoodRouteState extends State<FoodRoute> {
     const double nameFontSize = 25;
     const double nutritionFactsFontSize = 20;
     var rating = 3.0;
+    String quote = "Empty Quote";
+    String nickname = "Anonymous Bear";
 
     Widget reviewBlock(var review){
       return Container(
@@ -749,28 +725,6 @@ class _FoodRouteState extends State<FoodRoute> {
                   child: Row(children: currFood.reviewRow )
               ),
               const Divider(height: 10,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,),
-              Form(
-                key: _reviewKey,
-                child: Column(
-                  children: [
-                    // Padding(
-                    //   padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
-                    //   child: TextFormField(
-                    //     decoration: const InputDecoration(
-                    //       icon: Icon(Icons.comment),
-                    //       labelText: 'Write a Review',
-                    //     ),
-                    //     validator: (value) {
-                    //       ///TODO Implement Review database push
-                    //       print("Review: ${value!}, Stars: $rating, Time Posted: ${DateTime.now().millisecondsSinceEpoch/86400000}");
-                    //     },
-                    //     keyboardType: TextInputType.multiline,
-                    //     maxLines: null,
-                    //   )
-                    // ),
-                  ]
-                )
-              ),
 
               Padding(
                   padding: const EdgeInsets.all(8),
@@ -817,11 +771,105 @@ class _FoodRouteState extends State<FoodRoute> {
                       print(response.body);
                       // if (_reviewKey.currentState!.validate()) {} ///TODO add back for Reviews
                       Navigator.pop(context);
+                      routeAfterLoad = "/food";
+                      setState(() {
+                        diningHallMenus = [{}, {}, {}, {}];
+                        unsortedHalls =
+                        [cafeThree, clarkKerr, crossroads, foothill];
+                        halls = [];
+                        allFoodMap = {};
+                        dailyQuote =
+                        'Be the first one to leave a comment today!';
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, "/loading", (route) => false);
+                      });
                     },
                     child: const Text('Submit'),
                   )
               ),
-              // const Divider(height: 20,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,), ///TODO add back for Reviews
+              const Divider(height: 20,thickness: 1, indent: 5, endIndent: 5, color: Colors.black),
+              Form(
+                  key: _quoteKey,
+                  child: Column(
+                      children: [
+                        Padding(
+                            padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                icon: Icon(Icons.comment),
+                                labelText: 'Write a Quote of the Day!',
+                              ),
+                              validator: (value) {
+                                // print("Quote: ${value!}");
+                                quote = value!;
+                              },
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                            )
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                icon: Icon(Icons.person),
+                                labelText: 'Nickname',
+                              ),
+                              validator: (value) {
+                                // print("Nickname: ${value!}");
+                                nickname = value!;
+                              },
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                            )
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (_quoteKey.currentState!.validate()) {} ///TODO add back for Reviews
+                                String? deviceId = await _getId();
+                                var quoteOfDayData = jsonEncode(<String, String>{
+                                  "userId": deviceId!,
+                                  "quote": quote,
+                                  "nickName": nickname,
+                                  "timePosted": (DateTime.now().millisecondsSinceEpoch/86400000).toString()
+                                });
+                                print(quoteOfDayData);
+
+                                final http.Response response = await http.post(
+                                  Uri.parse('https://foodgrindapi.herokuapp.com/postQuote/'),
+                                  headers: <String, String>{
+                                    'Content-Type': 'application/json; charset=UTF-8',
+                                  },
+                                  body: quoteOfDayData,
+                                );
+                                print(response.statusCode);
+                                print(response.body);
+
+                                Navigator.pop(context);
+                                routeAfterLoad = "/food";
+                                setState(() {
+                                  diningHallMenus = [{}, {}, {}, {}];
+                                  unsortedHalls =
+                                  [cafeThree, clarkKerr, crossroads, foothill];
+                                  halls = [];
+                                  allFoodMap = {};
+                                  dailyQuote =
+                                  'Be the first one to leave a comment today!';
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, "/loading", (route) => false);
+                                });
+                              },
+                              child: const Text('Submit (optional)'),
+                            )
+                        ),
+                        SizedBox(
+                          height: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                      ]
+                  )
+              ),
+
               // const Padding(
               //   padding: EdgeInsets.all(8.0),
               //   child: Text("Reviews", style: TextStyle(
@@ -911,7 +959,7 @@ List<DiningHall> sortHalls(List<DiningHall> options) {
   return openHalls + closedHalls;
 }
 
-String dailyQuote = 'Be the first one to leave a comment today!';
+String dailyQuote = '-';
 String routeAfterLoad = '/home';
 
 DiningHall chosenHall = cafeThree;
