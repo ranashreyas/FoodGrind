@@ -73,21 +73,13 @@ class _LoadingRouteState extends State<LoadingRoute> {
 
   }
 
-  Future<void> getCafeData() async {
-
-    //Resets everything
-    // diningHallMenus = [{}, {}, {}, {}];
-    // unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
-    // halls = [];
-    // allFoodMap = {};
-    // dailyQuote = 'Be the first one to leave a comment today!';
+  getCafeData() async {
 
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('kk:mm').format(now);
     int minPassedInDay = int.parse(formattedDate.split(':')[0])*60 + int.parse(formattedDate.split(':')[1]);
-    // print(minPassedInDay);
     if(minPassedInDay > 1260){
-      hallFoodStateString = 'CLOSED';
+      hallFoodStateString = 'CLOSED till 7:30 a.m.';
       hallFoodState = 2;
     } else if(minPassedInDay > 990){
       hallFoodStateString = 'DINNER: 4:30 p.m. - 9:00 p.m.';
@@ -146,12 +138,9 @@ class _LoadingRouteState extends State<LoadingRoute> {
           Uri.parse('https://foodgrindapi.herokuapp.com/getAllNuts/'));
       var allTodaysFoodResponse = await http.get(
           Uri.parse('https://foodgrindapi.herokuapp.com/getAllFoods/'));
-      // var allTimesResponse = await http.get(
-      //     Uri.parse('https://foodgrindapi.herokuapp.com/getAllTimesnZones/'));
       var allFoodRatingsResponse = await http.get(
           Uri.parse('https://foodgrindapi.herokuapp.com/getAllRatings/'));
       var quoteOfDayResponse = await http.get(Uri.parse('https://foodgrindapi.herokuapp.com/getQODD/'));
-      // var allFoodReviewsResponse = await http.get(Uri.parse('https://foodgrindapi.herokuapp.com/reviews/')); ///TODO Implement Reviews
 
 
       var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
@@ -168,24 +157,24 @@ class _LoadingRouteState extends State<LoadingRoute> {
 
       for (var k in allFood.keys) { //Initializes complete dictionary of foods
 
-        List<Widget> reviewRow = stars[((allFoodRatings[k][0]>0)?allFoodRatings[k][0]*2 - 1:9).round()]
+        List<Widget> reviewRow = stars[((allFoodRatings[k][0]>0)?allFoodRatings[k][0]*2 - 1:10).round()]
             .map((element)=>element).toList(); //Copies the map, not creates an instance
-        reviewRow.insert(reviewRow.length, Text(((allFoodRatings[k][1]>0)?allFoodRatings[k][1]:1).toString()) );
-        // print(reviewRow);
+        reviewRow.insert(reviewRow.length, Text(((allFoodRatings[k][1]>0)?allFoodRatings[k][1]:0).toString()) );
 
         allFoodMap[k] = Food(
             k,//Food name
             '',//image???
             allFood[k],//nutrition facts
             "", //tags???
-            (allFoodRatings.containsKey(k) && allFoodRatings[k][1] > 0)? (allFoodRatings[k][0] * allFoodRatings[k][1].toDouble()).round():5,//sum ratings
-            (allFoodRatings.containsKey(k) && allFoodRatings[k][1] > 0)? allFoodRatings[k][1]:1,// num ratings
+            (allFoodRatings.containsKey(k) && allFoodRatings[k][1] > 0)? (allFoodRatings[k][0] * allFoodRatings[k][1].toDouble()).round():0,//sum ratings
+            (allFoodRatings.containsKey(k) && allFoodRatings[k][1] > 0)? allFoodRatings[k][1]:0,// num ratings
             reviewRow,
             []); // reviews
       }
-
-      print(allFoodRatings["Waffles"]);
-      print(diningHallMenus);
+      for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
+        unsortedHalls[i].sumRatings = 0;
+        unsortedHalls[i].numRatings = 0;
+      }
       for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
         // print(allTodaysFood['AllFoods'][i][hallFoodState]);
         for (var k in allTodaysFood['AllFoods'][i][hallFoodState].keys) { //change index 0, 1, 2 for b, l, d
@@ -196,7 +185,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
             if (allFoodMap[f] != null) {
               diningHallMenus[i][k]?.add(Food(allFoodMap[f].name, allFoodMap[f].image, allFoodMap[f].nutFacts, allFoodMap[f].label, allFoodMap[f].sumRatings, allFoodMap[f].numRatings, allFoodMap[f].reviewRow, allFoodMap[f].reviews));
 
-              diningHallMenus[i][k]?.sort((a, b) => (b.sumRatings~/(b.numRatings)).compareTo(a.sumRatings~/(a.numRatings)));
+              diningHallMenus[i][k]?.sort((a, b) => (b.sumRatings~/(b.numRatings+0.000001)).compareTo(a.sumRatings~/(a.numRatings+0.000001)));
 
               int foodSumRating = allFoodMap[f].sumRatings;
               int foodNumRating = allFoodMap[f].numRatings;
@@ -234,9 +223,9 @@ class _LoadingRouteState extends State<LoadingRoute> {
       print(e);
       dailyQuote = "API Error! Today's food not updated!";
     }
-    return Future.delayed(const Duration(seconds: 2), () => setState(() {
+    setState(() {
       Navigator.pushNamedAndRemoveUntil(context, routeAfterLoad, (route) => false);
-    }));
+    });
 
   }
 
@@ -249,7 +238,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
         automaticallyImplyLeading: false,
         title: const Text(
           'FoodGrind',
-          style: TextStyle(fontSize: 30),
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
         ),
         toolbarHeight: 40,
         backgroundColor: const Color.fromRGBO(46, 43, 43, 1),
@@ -293,8 +282,6 @@ class _HomeRouteState extends State<HomeRoute> {
     // TODO: implement initState
     super.initState();
 
-    // print(allFoodMap["Chicken Sandwich"].sumRatings);
-    // print(allFoodMap["Chicken Sandwich"].numRatings);
   }
 
   @override
@@ -303,6 +290,10 @@ class _HomeRouteState extends State<HomeRoute> {
     const double openButtonFontSize = 15;
 
     Widget homeBlock(DiningHall hall) {
+
+      List<Widget> reviewRowHall = (((hall.sumRatings/(hall.numRatings+0.0000001)*2 - 1).round()<0)?stars[10]:stars[(hall.sumRatings/(hall.numRatings+0.0000001)*2 - 1).round()]).map((element)=>element).toList();
+      reviewRowHall.insert(reviewRowHall.length, Text(hall.numRatings.toString()));
+
       return Container(
         margin: const EdgeInsets.only(left: 7, right: 7, top: 7),
         decoration: const BoxDecoration(
@@ -328,7 +319,7 @@ class _HomeRouteState extends State<HomeRoute> {
               ),
               Container(
                   alignment: const Alignment(-1, 0),
-                  child: Row(children: stars[(hall.sumRatings/hall.numRatings*2 - 1).round()])
+                  child: Row(children: reviewRowHall)
               ),
               Container(
                 margin: const EdgeInsets.only(top: 5),
@@ -406,7 +397,6 @@ class FoodRoute extends StatefulWidget {
 }
 
 class _FoodRouteState extends State<FoodRoute> {
-  late DiningHall chosenHallLocal;
 
   Map<String, bool> dropDownStates = {};
 
@@ -419,6 +409,7 @@ class _FoodRouteState extends State<FoodRoute> {
   @override
   void initState() {
     super.initState();
+    print("${chosenHall.name} ${chosenHall.sumRatings} ${chosenHall.numRatings}");
   }
 
   Future onRefresh() async{
@@ -459,8 +450,8 @@ class _FoodRouteState extends State<FoodRoute> {
           margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
           padding: const EdgeInsets.only(
               left: 20, right: 20, top: 7, bottom: 7),
-          decoration: const BoxDecoration(
-            // border: Border.all(color: Colors.black),
+          decoration: BoxDecoration(
+            border: (debug)?Border.all(color: Colors.black):Border.all(color: Colors.transparent),
             borderRadius: BorderRadius.all(Radius.circular(5)),
             color: Colors.white,
           ),
@@ -468,34 +459,52 @@ class _FoodRouteState extends State<FoodRoute> {
             children: <Widget>[
               Expanded(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      // border: Border.all(color: Colors.black),
+                    decoration:  BoxDecoration(
+                      border: (debug)?Border.all(color: Colors.black):Border.all(color: Colors.transparent),
                       color: Colors.white,
                     ),
-                    child: Text(
-                        currFood.name, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: menuItemFontSize,
-                            fontWeight: FontWeight.normal)),
+                    child: Flexible(child: Text(
+                    currFood.name,
+                    style: const TextStyle(fontSize: menuItemFontSize,
+                    fontWeight: FontWeight.normal)),)
+                    // child: Text(
+                    //     currFood.name, overflow: TextOverflow.ellipsis,
+                    //     style: const TextStyle(fontSize: menuItemFontSize,
+                    //         fontWeight: FontWeight.normal)),
                   )
               ),
-              IconButton(
-                icon: const Icon(Icons.fastfood),
-                color: Colors.black,
-                onPressed: () {
-                  _foodNutFactsModal(context, currFood);
-                },
+              Container(
+                decoration:  BoxDecoration(
+                  border: (debug)?Border.all(color: Colors.black):Border.all(color: Colors.transparent),
+                  color: Colors.white,
+                ),
+                child:IconButton(
+                  icon: const Icon(Icons.fastfood),
+                  iconSize: 30,
+                  color: Colors.black,
+                  onPressed: () {
+                    _foodNutFactsModal(context, currFood);
+                  },
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.rate_review),
-                color: Colors.black,
-                onPressed: () {
-                  _foodReviewModal(context, currFood);
-                },
+              Container(
+                decoration:  BoxDecoration(
+                  border: (debug)?Border.all(color: Colors.black):Border.all(color: Colors.transparent),
+                  color: Colors.white,
+                ),
+                child:IconButton(
+                  icon: const Icon(Icons.rate_review),
+                  iconSize: 30,
+                  color: Colors.black,
+                  onPressed: () {
+                    _foodReviewModal(context, currFood);
+                  },
+                ),
               ),
               Center(
                   child: Container(
-                      decoration: const BoxDecoration(
-                        // border: Border.all(color: Colors.black),
+                      decoration: BoxDecoration(
+                        border: (debug)?Border.all(color: Colors.black):Border.all(color: Colors.transparent),
                         color: Colors.white,
                       ),
                       child: Row(children: currFood.reviewRow)
@@ -505,61 +514,6 @@ class _FoodRouteState extends State<FoodRoute> {
             ],
           )
       );
-
-      // if(currFood.label.contains(tag)) {
-      //   return Container(
-      //       margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
-      //       padding: const EdgeInsets.only(
-      //           left: 20, right: 20, top: 7, bottom: 7),
-      //       decoration: const BoxDecoration(
-      //         // border: Border.all(color: Colors.black),
-      //         borderRadius: BorderRadius.all(Radius.circular(5)),
-      //         color: Colors.white,
-      //       ),
-      //       child: Row(
-      //         children: <Widget>[
-      //           Expanded(
-      //               child: Container(
-      //                 decoration: const BoxDecoration(
-      //                   // border: Border.all(color: Colors.black),
-      //                   color: Colors.white,
-      //                 ),
-      //                 child: Text(
-      //                     currFood.name, overflow: TextOverflow.ellipsis,
-      //                     style: const TextStyle(fontSize: menuItemFontSize,
-      //                         fontWeight: FontWeight.normal)),
-      //               )
-      //           ),
-      //           IconButton(
-      //             icon: const Icon(Icons.fastfood),
-      //             color: Colors.black,
-      //             onPressed: () {
-      //               _foodNutFactsModal(context, currFood);
-      //             },
-      //           ),
-      //           IconButton(
-      //             icon: const Icon(Icons.rate_review),
-      //             color: Colors.black,
-      //             onPressed: () {
-      //               _foodReviewModal(context, currFood, ratingsRow);
-      //             },
-      //           ),
-      //           Center(
-      //               child: Container(
-      //                   decoration: const BoxDecoration(
-      //                     // border: Border.all(color: Colors.black),
-      //                     color: Colors.white,
-      //                   ),
-      //                   child: Row(children: ratingsRow)
-      //                 // Text("10 ${stars[currFood.historicalRating - 1]}", style: const TextStyle(fontSize: menuItemFontSize, fontWeight: FontWeight.normal)),
-      //               )
-      //           )
-      //         ],
-      //       )
-      //     );
-      //   } else {
-      //   return Container();
-      // }
     }
     
     Widget dropdownBlock(String category){
@@ -600,15 +554,9 @@ class _FoodRouteState extends State<FoodRoute> {
       );
     }
 
-    // foodWidgets = <Widget>[
-    //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem)
-    // ];
-
-    // print("building!");
-
     for (var k in chosenHall.menu.keys){
       if(!dropDownStates.containsKey(k)){
-        dropDownStates[k] = false;
+        dropDownStates[k] = true;
       }
 
       entireDropdownWidgets.add(dropdownBlock(k)); // creates the dropdown block
@@ -617,23 +565,12 @@ class _FoodRouteState extends State<FoodRoute> {
         for (Food foodItem in chosenHall.menu[k]!) foodBlock(foodItem, k)
       ]):entireDropdownWidgets.add(Container());
     }
-    // pastaWidgets = <Widget>[
-    //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "pasta")
-    // ];
-    // otherWidgets = <Widget>[
-    //   for (Food foodItem in chosenHall.menu) foodBlock(foodItem, "other")
-    // ];
-    // foodWidgets.add(dropdownBlock("PASTA"));
-    // (dropDownStates['PASTA']!)?foodWidgets.addAll(pastaWidgets):foodWidgets.add(Container());
-    // foodWidgets.add(dropdownBlock("OTHER"));
-    // (dropDownStates['OTHER']!)?foodWidgets.addAll(otherWidgets):foodWidgets.add(Container());
-
 
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: Text(chosenHall.name),
-        titleTextStyle: const TextStyle(fontSize: 30),
+        title: Text("${chosenHall.name} - ${hallFoodStateString.split(" ")[0]}"),
+        titleTextStyle: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         backgroundColor: const Color.fromARGB(255, 83, 83, 83),
         automaticallyImplyLeading: true,
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () {
@@ -653,7 +590,6 @@ class _FoodRouteState extends State<FoodRoute> {
     const double nameFontSize = 25;
     const double nutritionFactsFontSize = 20;
     var simplifiedNutFacts = "";
-    var rating = 3.0;
 
     for (var f in currFood.nutFacts){
       simplifiedNutFacts += f + "\n";
@@ -802,6 +738,7 @@ class _FoodRouteState extends State<FoodRoute> {
                               validator: (value) {
                                 // print("Quote: ${value!}");
                                 quote = value!;
+                                if (quote == "") quote = "Empty Quote";
                               },
                               keyboardType: TextInputType.multiline,
                               maxLines: null,
@@ -815,8 +752,8 @@ class _FoodRouteState extends State<FoodRoute> {
                                 labelText: 'Nickname',
                               ),
                               validator: (value) {
-                                // print("Nickname: ${value!}");
                                 nickname = value!;
+                                if (nickname == "") nickname = "Anonymous Bear";
                               },
                               keyboardType: TextInputType.multiline,
                               maxLines: null,
@@ -834,7 +771,6 @@ class _FoodRouteState extends State<FoodRoute> {
                                   "nickName": nickname,
                                   "timePosted": (DateTime.now().millisecondsSinceEpoch/86400000).toString()
                                 });
-                                print(quoteOfDayData);
 
                                 final http.Response response = await http.post(
                                   Uri.parse('https://foodgrindapi.herokuapp.com/postQuote/'),
@@ -925,8 +861,8 @@ class Food {
 
 class DiningHall {
   late String name, image;
-  late int sumRatings = 5;
-  late int numRatings = 1;
+  late int sumRatings = 0;
+  late int numRatings = 0;
   late Map<String, List<Food>> menu;
   late List openTimes = [[], [], [], [], [], []];
   late bool isOpen = (name == "Crossroads")?false:true;
@@ -954,8 +890,8 @@ List<DiningHall> sortHalls(List<DiningHall> options) {
       closedHalls.add(h);
     }
   }
-  closedHalls.sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
-  openHalls.sort((a, b) => (b.sumRatings~/b.numRatings).compareTo(a.sumRatings~/a.numRatings));
+  closedHalls.sort((a, b) => (b.sumRatings~/(b.numRatings+0.0000001)).compareTo(a.sumRatings~/(a.numRatings+0.0000001)));
+  openHalls.sort((a, b) => (b.sumRatings~/(b.numRatings+0.0000001)).compareTo(a.sumRatings~/(a.numRatings+0.0000001)));
   return openHalls + closedHalls;
 }
 
@@ -969,16 +905,17 @@ int hallFoodState = 0;
 List<DiningHall> unsortedHalls = [cafeThree, clarkKerr, crossroads, foothill];
 List<DiningHall> halls = [];
 var stars = [
-  <Widget>[Image.asset('Assets/images/halfStar.png', height: 20, width: 20)],
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20)], //1 star
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/halfStar.png', height: 20, width: 20)],
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20)], // 2 star
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/halfStar.png', height: 20, width: 20)],
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20)], // 3 star
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/halfStar.png', height: 20, width: 20)],
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20)],
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/halfStar.png', height: 20, width: 20)],
-  <Widget>[Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20), Image.asset('Assets/images/star.png', height: 20, width: 20)],
+  <Widget>[const Icon(Icons.star_half, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20)],
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20)], //1 star
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star_half, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20)],
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20)], // 2 star
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star_half, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20)],
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20)], // 3 star
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star_half, size: 20), const Icon(Icons.star_border, size: 20)],
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star_border, size: 20)],//4 star
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star_half, size: 20)],
+  <Widget>[const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20), const Icon(Icons.star, size: 20)], //5 star
+  <Widget>[const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20), const Icon(Icons.star_border, size: 20)],
 ];
 
 Map allFoodMap = {};
@@ -989,3 +926,5 @@ DiningHall cafeThree = DiningHall('Cafe 3', '', diningHallMenus[0]);
 DiningHall clarkKerr = DiningHall('Clark Kerr', '', diningHallMenus[1]);
 DiningHall crossroads = DiningHall('Crossroads', '', diningHallMenus[2]);
 DiningHall foothill = DiningHall('Foothill', '', diningHallMenus[3]);
+
+bool debug = false;
