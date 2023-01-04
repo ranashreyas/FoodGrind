@@ -32,6 +32,7 @@ dependencies:
   http:
   flutter_rating_bar:
   loading_animation_widget:
+  flutter_keyboard_visibility:
   device_info:
   device_info_plus:
   platform_device_id:

@@ -1,43 +1,15 @@
-// "Quinoa Pilaf": [
-//   "Calories (kcal): 214.73",
-//   "Total Lipid/Fat (g): 9.14",
-//   "Saturated fatty acid (g): 1.21",
-//   "Trans Fat (g): N/A",
-//   "Cholesterol (mg): 0",
-//   "Sodium (mg): 2.89",
-//   "Carbohydrate (g): 27.36",
-//   "Total Dietary Fiber (g): 3.02",
-//   "Sugar (g): 0.01",
-//   "Protein (g): 6.04",
-//   "Vitamin A (iu): 101.47",
-//   "Vitamin C (mg): 1.51",
-//   "Calcium (mg): 21.62",
-//   "Iron (mg): 2.05",
-//   "Water (g): 39.27",
-//   "Ash (g): 1.04",
-//   "Vitamin A (rae): N/A",
-//   "Potassium (mg): 245.69",
-//   "Vitamin D(iu): 0",
-//   "Carbon Footprint (kg CO2): 0.22",
-//   "Pasta, Dinner, Front plate, etc....."
-// ]
-
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io' show HttpHeaders, Platform;
 import 'package:flutter/material.dart';
-import 'package:flutter_launcher_icons/utils.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:http/http.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-// import 'package:device_info/device_info.dart';
-// import 'package:platform_device_id/platform_device_id.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-
-
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 void main() {
   runApp(
@@ -52,9 +24,6 @@ void main() {
     ),
   );
 }
-
-
-
 
 class LoadingRoute extends StatefulWidget {
   const LoadingRoute({Key? key}) : super(key: key);
@@ -74,7 +43,6 @@ class _LoadingRouteState extends State<LoadingRoute> {
   }
 
   getCafeData() async {
-
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('kk:mm').format(now);
     int minPassedInDay = int.parse(formattedDate.split(':')[0])*60 + int.parse(formattedDate.split(':')[1]);
@@ -122,7 +90,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
         }
 
         final http.Response response = await http.post(
-          Uri.parse('https://foodgrindapi.herokuapp.com/postId/'),
+          Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/postId/'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -135,12 +103,12 @@ class _LoadingRouteState extends State<LoadingRoute> {
       }
 
       var allFoodResponse = await http.get(
-          Uri.parse('https://foodgrindapi.herokuapp.com/getAllNuts/'));
+          Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/getAllNuts/'));
       var allTodaysFoodResponse = await http.get(
-          Uri.parse('https://foodgrindapi.herokuapp.com/getAllFoods/'));
+          Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/getAllFoods/'));
       var allFoodRatingsResponse = await http.get(
-          Uri.parse('https://foodgrindapi.herokuapp.com/getAllRatings/'));
-      var quoteOfDayResponse = await http.get(Uri.parse('https://foodgrindapi.herokuapp.com/getQODD/'));
+          Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/getAllRatings/'));
+      var quoteOfDayResponse = await http.get(Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/getQODD/'));
 
 
       var allFood = jsonDecode(allFoodResponse.body)['NutFacts'];
@@ -176,7 +144,6 @@ class _LoadingRouteState extends State<LoadingRoute> {
         unsortedHalls[i].numRatings = 0;
       }
       for (var i = 0; i < allTodaysFood['AllFoods'].length; i++) {
-        // print(allTodaysFood['AllFoods'][i][hallFoodState]);
         for (var k in allTodaysFood['AllFoods'][i][hallFoodState].keys) { //change index 0, 1, 2 for b, l, d
           for(var f in allTodaysFood['AllFoods'][i][hallFoodState][k]){
             if(!diningHallMenus[i].containsKey(k)){
@@ -202,12 +169,12 @@ class _LoadingRouteState extends State<LoadingRoute> {
                   '',
                   ["Nutrition Facts Not Available"],
                   "other",
-                  5,
-                  1,
+                  0,
+                  0,
                   ratingsRow,
                   []));
-              unsortedHalls[i].sumRatings += 5;
-              unsortedHalls[i].numRatings += 1;
+              unsortedHalls[i].sumRatings += 0;
+              unsortedHalls[i].numRatings += 0;
             }
           }
         }
@@ -219,9 +186,11 @@ class _LoadingRouteState extends State<LoadingRoute> {
       foothill.menu = diningHallMenus[3];
 
       halls = sortHalls(unsortedHalls);
+      apiDisconnect = false;
     } catch (e){
       print(e);
       dailyQuote = "API Error! Today's food not updated!";
+      apiDisconnect = true;
     }
     setState(() {
       Navigator.pushNamedAndRemoveUntil(context, routeAfterLoad, (route) => false);
@@ -233,7 +202,7 @@ class _LoadingRouteState extends State<LoadingRoute> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 240, 239, 239),
+      backgroundColor: ColorPalette["backgroundColor"],
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
@@ -241,23 +210,19 @@ class _LoadingRouteState extends State<LoadingRoute> {
           style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
         ),
         toolbarHeight: 40,
-        backgroundColor: const Color.fromRGBO(46, 43, 43, 1),
-        shadowColor: const Color(0x00FFFFFF),
+        backgroundColor: ColorPalette["header"],
       ),
       body: Center(
-        child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.black, size: 100)
+        child: LoadingAnimationWidget.staggeredDotsWave(color: ColorPalette["header"]!, size: 100)
       )
     );
   }
 }
 
-
-
 class HomeRoute extends StatefulWidget {
   const HomeRoute({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomeRouteState createState() => _HomeRouteState();
 }
 
@@ -281,7 +246,6 @@ class _HomeRouteState extends State<HomeRoute> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
   }
 
   @override
@@ -340,20 +304,23 @@ class _HomeRouteState extends State<HomeRoute> {
       for (DiningHall h in halls) homeBlock(h)
     ];
     hallWidgetList.insert(0, Container(
-      color: Colors.grey[800],
-      height: 60,
+      margin: const EdgeInsets.only(left: 3, right: 3, top: 3),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(5)),
+        color: ColorPalette["blueHighlight"],
+      ),
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+      padding: const EdgeInsets.fromLTRB(15, 10, 15, 10),
       child: Text(
-        dailyQuote,
-        style: const TextStyle(fontSize: 15, color: Colors.white),
+        '"${dailyQuote}"',
+        style: const TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.bold),
         textAlign: TextAlign.center,
       ),
     ));
 
 
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: ColorPalette["backgroundColor"],
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
@@ -361,20 +328,35 @@ class _HomeRouteState extends State<HomeRoute> {
           style: TextStyle(fontSize: 30),
         ),
         toolbarHeight: 40,
-        backgroundColor: const Color.fromRGBO(46, 43, 43, 1),
+        backgroundColor: ColorPalette["header"],
         shadowColor: const Color(0x00FFFFFF),
       ),
       body: Stack(children: <Widget>[
         RefreshIndicator(
           onRefresh: onRefresh,
-          child: ListView(
+          child:
+          (apiDisconnect)?
+          ListView(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 50),
+                child: Text(
+                    "Error, cannot reach backend. \nIt's not us, blame Eduroam.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.black38)
+                ),
+              )
+            ],
+          ):
+          ListView(
             children: hallWidgetList
           )
         ),
         Align(
           alignment: const Alignment(0.8, 0.9),
           child: FloatingActionButton(
-              backgroundColor: const Color(0xFFD9D9D9),
+              elevation: 0,
+              backgroundColor: ColorPalette["actionButton"],
               onPressed: () {
                 Navigator.pushNamed(context, '/help');
               },
@@ -399,17 +381,29 @@ class FoodRoute extends StatefulWidget {
 class _FoodRouteState extends State<FoodRoute> {
 
   Map<String, bool> dropDownStates = {};
-
+  Map<String, double> dropDownAnimationStates = {};
+  Map<String, Widget> dropDownAnimationContainers = {};
   late List<Widget> entireDropdownWidgets = [];
-  late List<List<Widget>> stationWidgets;
 
-  late List<Widget> reviewWidgets;
+  late bool expandCollapse = false;
+
+  late bool submitLoadingKey = false;
+  late bool submitCheckmarkKey = false;
+
   final _quoteKey = GlobalKey<FormState>();
+
+  late StreamSubscription<bool> keyboardSubscription;
 
   @override
   void initState() {
     super.initState();
     print("${chosenHall.name} ${chosenHall.sumRatings} ${chosenHall.numRatings}");
+
+    var keyboardVisibilityController = KeyboardVisibilityController();
+    // Subscribe
+    keyboardSubscription = keyboardVisibilityController.onChange.listen((bool visible) {
+      print('Keyboard visible: $visible');
+    });
   }
 
   Future onRefresh() async{
@@ -518,47 +512,62 @@ class _FoodRouteState extends State<FoodRoute> {
     
     Widget dropdownBlock(String category){
       return GestureDetector(
-          onTap: () {
-            setState(() {
-              (dropDownStates[category]!)?(dropDownStates[category] = false):(dropDownStates[category] = true);
-              entireDropdownWidgets = [];
-              // Navigator.pushNamed(context, '/food');
-            });
-          },
-          child: Container(
-              margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
-              padding: const EdgeInsets.only(
-                  left: 20, right: 20, top: 20, bottom: 20),
-              decoration: BoxDecoration(
-                // border: Border.all(color: Colors.black),
-                borderRadius: const BorderRadius.all(Radius.circular(5)),
-                color: Colors.grey[400],
+        onTap: () {
+          setState(() {
+            if(dropDownStates[category]!){
+              dropDownStates[category] = false;
+              dropDownAnimationStates[category] = 0;
+              dropDownAnimationContainers[category];
+            } else {
+              dropDownStates[category] = true;
+              dropDownAnimationStates[category] = 50;
+              dropDownAnimationContainers[category];
+            }
+            // (dropDownStates[category]!)?():();
+            entireDropdownWidgets = [];
+            // Navigator.pushNamed(context, '/food');
+          });
+        },
+        child: Container(
+          margin: const EdgeInsets.only(left: 5, right: 5, top: 5),
+          padding: const EdgeInsets.only(
+              left: 20, right: 20, top: 10, bottom: 10),
+          decoration: BoxDecoration(
+            // border: Border.all(color: Colors.black),
+            borderRadius: const BorderRadius.all(Radius.circular(5)),
+            color: (dropDownStates[category]!)?ColorPalette["blueHighlight"]:ColorPalette["dropdownColor"],
+          ),
+          child: Row(
+            children: <Widget>[
+              (dropDownStates[category]!)?const Icon(Icons.keyboard_arrow_down):const Icon(Icons.keyboard_arrow_up),
+              Expanded(
+                child: Text(
+                    category.toUpperCase(), overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: dropdownFontSize,
+                        fontWeight: FontWeight.bold)),
               ),
-              child: Row(
-                children: <Widget>[
-                  (dropDownStates[category]!)?const Icon(Icons.keyboard_arrow_down):const Icon(Icons.keyboard_arrow_up),
-                  Expanded(
-                      child: Container(
-                        decoration:  BoxDecoration(
-                          color: Colors.grey[400],
-                        ),
-                        child: Text(
-                            category.toUpperCase(), overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: dropdownFontSize,
-                                fontWeight: FontWeight.bold)),
-                      )
-                  ),
-                ],
-              )
+            ],
           )
+        )
       );
     }
 
     for (var k in chosenHall.menu.keys){
       if(!dropDownStates.containsKey(k)){
-        dropDownStates[k] = true;
-      }
+        dropDownStates[k] = false;
 
+        int? temp = chosenHall.menu[k]?.length;
+        double foodBlockHeight = 0;
+        for(int i = 0; i < temp!; i++){
+          foodBlockHeight += 50;
+        }
+        dropDownAnimationStates[k] = foodBlockHeight;
+        dropDownAnimationContainers[k] = AnimatedContainer(
+          height: dropDownAnimationStates[k],
+          duration: const Duration(seconds: 1),
+          curve: Curves.fastOutSlowIn,
+        );
+      }
       entireDropdownWidgets.add(dropdownBlock(k)); // creates the dropdown block
 
       (dropDownStates[k]!)?entireDropdownWidgets.addAll(<Widget>[ //adds the menu that should be shown or not
@@ -566,12 +575,13 @@ class _FoodRouteState extends State<FoodRoute> {
       ]):entireDropdownWidgets.add(Container());
     }
 
+
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: ColorPalette["backgroundColor"],
       appBar: AppBar(
         title: Text("${chosenHall.name} - ${hallFoodStateString.split(" ")[0]}"),
         titleTextStyle: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-        backgroundColor: const Color.fromARGB(255, 83, 83, 83),
+        backgroundColor: ColorPalette["header"],
         automaticallyImplyLeading: true,
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () {
           setState(() {
@@ -579,9 +589,43 @@ class _FoodRouteState extends State<FoodRoute> {
           });
         }),
       ),
-      body: RefreshIndicator(
-        onRefresh: onRefresh,
-        child: ListView(children: entireDropdownWidgets)
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: onRefresh,
+            child: ListView(children: entireDropdownWidgets)
+          ),
+          Visibility(
+            visible: submitLoadingKey,
+            child: Align(
+              alignment: const Alignment(0, -0.6),
+              child: LoadingAnimationWidget.staggeredDotsWave(color: ColorPalette["header"]!, size: 100),
+            ),
+          ),
+          Visibility(
+            visible: submitCheckmarkKey,
+            child: Align(
+              alignment: const Alignment(0, -0.6),
+              child: LoadingAnimationWidget.beat(color: ColorPalette["header"]!, size: 100),
+            ),
+          ),
+          Align(
+            alignment: const Alignment(0.8, 0.9),
+            child: FloatingActionButton(
+              elevation: 0,
+              backgroundColor: ColorPalette["actionButton"],
+                onPressed: () {
+                  expandCollapse = !expandCollapse;
+                  entireDropdownWidgets = [];
+                  for(var k in dropDownStates.keys){
+                    dropDownStates[k] = expandCollapse;
+                  }
+                  setState(() {});
+                },
+                child: Icon((expandCollapse)?Icons.keyboard_arrow_up:Icons.keyboard_arrow_down, color: Colors.black),
+            )
+          ),
+        ],
       )
     );
   }
@@ -647,7 +691,8 @@ class _FoodRouteState extends State<FoodRoute> {
     }
 
     showModalBottomSheet(context: context, builder: (BuildContext bc){
-      return SizedBox(
+      return KeyboardDismissOnTap(
+        child: SizedBox(
           height: MediaQuery.of(context).size.height*.8,
           child: ListView(
             children: <Widget>[
@@ -661,7 +706,6 @@ class _FoodRouteState extends State<FoodRoute> {
                   child: Row(children: currFood.reviewRow )
               ),
               const Divider(height: 10,thickness: 1, indent: 5, endIndent: 5, color: Colors.black,),
-
               Padding(
                   padding: const EdgeInsets.all(8),
                   child: Center(
@@ -685,7 +729,13 @@ class _FoodRouteState extends State<FoodRoute> {
               Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(primary: ColorPalette["blueHighlight"], elevation: 0),
                     onPressed: () async {
+                      setState(() {
+                        submitLoadingKey = true;
+                        submitCheckmarkKey = false;
+                      });
+
                       String? deviceId = await _getId();
                       var ratingToPost = jsonEncode(<String, String>{
                         "userId": deviceId!,
@@ -697,28 +747,26 @@ class _FoodRouteState extends State<FoodRoute> {
                       // print(ratingToPost);
 
                       final http.Response response = await http.post(
-                        Uri.parse('https://foodgrindapi.herokuapp.com/postRating/'),
+                        Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/postRating/'),
                         headers: <String, String>{
                           'Content-Type': 'application/json; charset=UTF-8',
                         },
                         body: ratingToPost,
                       );
-                      print(response.statusCode);
-                      print(response.body);
-                      // if (_reviewKey.currentState!.validate()) {} ///TODO add back for Reviews
-                      Navigator.pop(context);
+
                       routeAfterLoad = "/food";
                       setState(() {
-                        diningHallMenus = [{}, {}, {}, {}];
-                        unsortedHalls =
-                        [cafeThree, clarkKerr, crossroads, foothill];
-                        halls = [];
-                        allFoodMap = {};
-                        dailyQuote =
-                        'Be the first one to leave a comment today!';
-                        Navigator.pushNamedAndRemoveUntil(
-                            context, "/loading", (route) => false);
+                        submitLoadingKey = false;
+                        submitCheckmarkKey = true;
                       });
+                      await Future.delayed(const Duration(seconds: 1), (){
+                        setState(() {
+                          submitLoadingKey = false;
+                          submitCheckmarkKey = false;
+                          entireDropdownWidgets = [];
+                        });
+                      });
+                      Navigator.pop(context);
                     },
                     child: const Text('Submit'),
                   )
@@ -762,7 +810,14 @@ class _FoodRouteState extends State<FoodRoute> {
                         Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(primary: ColorPalette["blueHighlight"], elevation: 0),
                               onPressed: () async {
+
+                                setState(() {
+                                  submitLoadingKey = true;
+                                  submitCheckmarkKey = false;
+                                });
+
                                 if (_quoteKey.currentState!.validate()) {} ///TODO add back for Reviews
                                 String? deviceId = await _getId();
                                 var quoteOfDayData = jsonEncode(<String, String>{
@@ -773,28 +828,25 @@ class _FoodRouteState extends State<FoodRoute> {
                                 });
 
                                 final http.Response response = await http.post(
-                                  Uri.parse('https://foodgrindapi.herokuapp.com/postQuote/'),
+                                  Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/postQuote/'),
                                   headers: <String, String>{
                                     'Content-Type': 'application/json; charset=UTF-8',
                                   },
                                   body: quoteOfDayData,
                                 );
-                                print(response.statusCode);
-                                print(response.body);
-
-                                Navigator.pop(context);
                                 routeAfterLoad = "/food";
                                 setState(() {
-                                  diningHallMenus = [{}, {}, {}, {}];
-                                  unsortedHalls =
-                                  [cafeThree, clarkKerr, crossroads, foothill];
-                                  halls = [];
-                                  allFoodMap = {};
-                                  dailyQuote =
-                                  'Be the first one to leave a comment today!';
-                                  Navigator.pushNamedAndRemoveUntil(
-                                      context, "/loading", (route) => false);
+                                  submitLoadingKey = false;
+                                  submitCheckmarkKey = true;
                                 });
+                                await Future.delayed(const Duration(seconds: 1), (){
+                                  setState(() {
+                                    entireDropdownWidgets = [];
+                                    submitLoadingKey = false;
+                                    submitCheckmarkKey = false;
+                                  });
+                                });
+                                Navigator.pop(context);
                               },
                               child: const Text('Submit (optional)'),
                             )
@@ -814,6 +866,7 @@ class _FoodRouteState extends State<FoodRoute> {
               // for (var review in currFood.reviews) reviewBlock(review)
             ],
           )
+        )
       );
     });
   }
@@ -828,7 +881,7 @@ class HelpRoute extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Help Route"),
-        backgroundColor: const Color.fromARGB(255, 83, 83, 83),
+        backgroundColor: ColorPalette["header"],
       ),
       body: Container(
         margin: const EdgeInsets.all(20),
@@ -838,7 +891,7 @@ class HelpRoute extends StatelessWidget {
                   Image.asset('Assets/images/FOODGRIND.png', height: 283, width: 150),
                   Container(height: 20,),
                   const Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina and Shreyas Rana.', style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700), textAlign: TextAlign.center)
+                      fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black38), textAlign: TextAlign.center)
                 ],
             )
         )
@@ -858,6 +911,15 @@ class Food {
 
   Food(this.name, this.image, this.nutFacts, this.label, this.sumRatings, this.numRatings, this.reviewRow, this.reviews);
 }
+
+Map<String, Color> ColorPalette = {
+  "backgroundColor": const Color.fromARGB(255, 234, 234, 234),
+  "dropdownColor": const Color.fromARGB(255, 175, 175, 175),
+  "header": const Color.fromARGB(255, 15, 100, 241),
+  "blueHighlight": const Color.fromARGB(255, 85, 170, 234),
+  "actionButton": const Color.fromARGB(150, 85, 170, 234),
+  "rate": const Color.fromARGB(255, 250, 207, 0)
+};
 
 class DiningHall {
   late String name, image;
@@ -928,3 +990,4 @@ DiningHall crossroads = DiningHall('Crossroads', '', diningHallMenus[2]);
 DiningHall foothill = DiningHall('Foothill', '', diningHallMenus[3]);
 
 bool debug = false;
+bool apiDisconnect = false;
