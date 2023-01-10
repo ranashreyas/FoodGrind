@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
-import 'dart:io' show HttpHeaders, Platform;
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 void main() {
   runApp(
@@ -596,6 +597,14 @@ class _FoodRouteState extends State<FoodRoute> {
             child: ListView(children: entireDropdownWidgets)
           ),
           Visibility(
+            visible: (submitLoadingKey || submitCheckmarkKey),
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              color: Color.fromRGBO(0,0,0, 0.8),
+            ),
+          ),
+          Visibility(
             visible: submitLoadingKey,
             child: Align(
               alignment: const Alignment(0, -0.6),
@@ -872,29 +881,130 @@ class _FoodRouteState extends State<FoodRoute> {
   }
 }
 
-// Help and About Route
-class HelpRoute extends StatelessWidget {
+class HelpRoute extends StatefulWidget {
   const HelpRoute({Key? key}) : super(key: key);
 
   @override
+  State<HelpRoute> createState() => _HelpRouteState();
+}
+
+// Help and About Route
+class _HelpRouteState extends State<HelpRoute> {
+  final _feedbackKey = GlobalKey<FormState>();
+
+  late bool submitLoadingKey = false;
+  late bool submitCheckmarkKey = false;
+
+  @override
   Widget build(BuildContext context) {
+    String body = "Empty Body";
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Help Route"),
         backgroundColor: ColorPalette["header"],
       ),
-      body: Container(
-        margin: const EdgeInsets.all(20),
-        child: Center(
-            child: Column(
+      body: Stack(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(20),
+            child: Center(
+              child: Column(
                 children: [
                   Image.asset('Assets/images/FOODGRIND.png', height: 283, width: 150),
                   Container(height: 20,),
                   const Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina and Shreyas Rana.', style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black38), textAlign: TextAlign.center)
+                      fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black38), textAlign: TextAlign.center),
+
+                  Form(
+                    key: _feedbackKey,
+                    child: Column(
+                      children: [
+                        Padding(
+                            padding: const EdgeInsets.only(top: 30.0, bottom:8.0, right:8.0, left:8.0),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                icon: Icon(Icons.comment),
+                                labelText: 'Send feedback',
+                              ),
+                              validator: (value) {
+                                body = value!;
+                                if (body == "") body = "Empty Body";
+                              },
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                            )
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(primary: ColorPalette["blueHighlight"], elevation: 0),
+                            onPressed: () async {
+
+                              setState(() {
+                                submitLoadingKey = true;
+                                submitCheckmarkKey = false;
+                              });
+
+                              if (_feedbackKey.currentState!.validate()) {}
+                              // String? deviceId = await _getId();
+
+                              ///TODO insert email feedback
+                              final Email sendEmail = Email(
+                                body: body,
+                                subject: 'FoodGrind Feedback',
+                                recipients: ['foodgrindcal@gmail.com'],
+                                isHTML: false,
+                              );
+
+                              await FlutterEmailSender.send(sendEmail);
+                              setState(() {
+                                submitLoadingKey = false;
+                                submitCheckmarkKey = true;
+                              });
+                              await Future.delayed(const Duration(seconds: 1), (){
+                                setState(() {
+                                  submitLoadingKey = false;
+                                  submitCheckmarkKey = false;
+                                });
+                              });
+                            },
+                            child: const Text('Submit'),
+                          )
+                        ),
+                        SizedBox(
+                          height: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                      ]
+                    )
+                  )
                 ],
-            )
-        )
+              )
+            ),
+          ),
+          Visibility(
+            visible: (submitLoadingKey || submitCheckmarkKey),
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              color: Color.fromRGBO(0,0,0, 0.8),
+            ),
+          ),
+          Visibility(
+            visible: submitLoadingKey,
+            child: Align(
+              alignment: const Alignment(0, -0.6),
+              child: LoadingAnimationWidget.staggeredDotsWave(color: ColorPalette["header"]!, size: 100),
+            ),
+          ),
+          Visibility(
+            visible: submitCheckmarkKey,
+            child: Align(
+              alignment: const Alignment(0, -0.6),
+              child: LoadingAnimationWidget.beat(color: ColorPalette["header"]!, size: 100),
+            ),
+          ),
+        ],
       )
     );
   }
