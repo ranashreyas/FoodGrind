@@ -14,18 +14,15 @@ import 'package:flutter_email_sender/flutter_email_sender.dart';
 
 void main() {
   runApp(
-    WillPopScope(
-      onWillPop: () async => false,
-      child: MaterialApp(
-        initialRoute: '/loading',
-        routes: {
-          '/loading': (context) => const LoadingRoute(),
-          '/home': (context) => const HomeRoute(),
-          '/food': (context) => const FoodRoute(),
-          '/help': (context) => const HelpRoute(),
-        },
-      ),
-    )
+    MaterialApp(
+      initialRoute: '/loading',
+      routes: {
+        '/loading': (context) => const LoadingRoute(),
+        '/home': (context) => const HomeRoute(),
+        '/food': (context) => const FoodRoute(),
+        '/help': (context) => const HelpRoute(),
+      },
+    ),
   );
 }
 
@@ -272,7 +269,7 @@ class _HomeRouteState extends State<HomeRoute> {
         child: InkWell(
           onTap: () {
             chosenHall = hall;
-            Navigator.pushNamedAndRemoveUntil(context, '/food', (route) => false);
+            Navigator.pushNamed(context, '/food');
           },
           child: Column(
             children: [
@@ -362,7 +359,7 @@ class _HomeRouteState extends State<HomeRoute> {
               elevation: 0,
               backgroundColor: ColorPalette["actionButton"],
               onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(context, '/help', (route) => false);
+                Navigator.pushNamed(context, '/help');
               },
               child: const Text(
                 '?',
@@ -589,7 +586,7 @@ class _FoodRouteState extends State<FoodRoute> {
         automaticallyImplyLeading: true,
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () {
           setState(() {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushNamed(context, '/home');
           });
         }),
       ),
@@ -785,90 +782,97 @@ class _FoodRouteState extends State<FoodRoute> {
               ),
               const Divider(height: 20,thickness: 1, indent: 5, endIndent: 5, color: Colors.black),
               Form(
-                key: _quoteKey,
-                child: Column(
-                  children: [
-                    Padding(
-                        padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            icon: Icon(Icons.comment),
-                            labelText: 'Write a Quote of the Day!',
-                          ),
-                          validator: (value) {
-                            // print("Quote: ${value!}");
-                            quote = value!;
-                            if (quote == "") quote = "Empty Quote";
-                          },
-                          keyboardType: TextInputType.multiline,
-                          maxLines: null,
-                        )
-                    ),
-                    Padding(
-                        padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            icon: Icon(Icons.person),
-                            labelText: 'Nickname',
-                          ),
-                          validator: (value) {
-                            nickname = value!;
-                            if (nickname == "") nickname = "Anonymous Bear";
-                          },
-                          keyboardType: TextInputType.multiline,
-                          maxLines: null,
-                        )
-                    ),
-                    Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(primary: ColorPalette["blueHighlight"], elevation: 0),
-                          onPressed: () async {
-
-                            setState(() {
-                              submitLoadingKey = true;
-                              submitCheckmarkKey = false;
-                            });
-
-                            if (_quoteKey.currentState!.validate()) {} ///TODO add back for Reviews
-                            String? deviceId = await _getId();
-                            var quoteOfDayData = jsonEncode(<String, String>{
-                              "userId": deviceId!,
-                              "quote": quote,
-                              "nickName": nickname,
-                              "timePosted": (DateTime.now().millisecondsSinceEpoch/86400000).toString()
-                            });
-
-                            final http.Response response = await http.post(
-                              Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/postQuote/'),
-                              headers: <String, String>{
-                                'Content-Type': 'application/json; charset=UTF-8',
+                  key: _quoteKey,
+                  child: Column(
+                      children: [
+                        Padding(
+                            padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                icon: Icon(Icons.comment),
+                                labelText: 'Write a Quote of the Day!',
+                              ),
+                              validator: (value) {
+                                // print("Quote: ${value!}");
+                                quote = value!;
+                                if (quote == "") quote = "Empty Quote";
                               },
-                              body: quoteOfDayData,
-                            );
-                            routeAfterLoad = "/food";
-                            setState(() {
-                              submitLoadingKey = false;
-                              submitCheckmarkKey = true;
-                            });
-                            await Future.delayed(const Duration(seconds: 1), (){
-                              setState(() {
-                                entireDropdownWidgets = [];
-                                submitLoadingKey = false;
-                                submitCheckmarkKey = false;
-                              });
-                            });
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Submit (optional)'),
-                        )
-                    ),
-                    SizedBox(
-                      height: MediaQuery.of(context).viewInsets.bottom,
-                    ),
-                  ]
-                )
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                            )
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.only(top:0, bottom:8.0, right:8.0, left:8.0),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                icon: Icon(Icons.person),
+                                labelText: 'Nickname',
+                              ),
+                              validator: (value) {
+                                nickname = value!;
+                                if (nickname == "") nickname = "Anonymous Bear";
+                              },
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                            )
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(primary: ColorPalette["blueHighlight"], elevation: 0),
+                              onPressed: () async {
+
+                                setState(() {
+                                  submitLoadingKey = true;
+                                  submitCheckmarkKey = false;
+                                });
+
+                                if (_quoteKey.currentState!.validate()) {} ///TODO add back for Reviews
+                                String? deviceId = await _getId();
+                                var quoteOfDayData = jsonEncode(<String, String>{
+                                  "userId": deviceId!,
+                                  "quote": quote,
+                                  "nickName": nickname,
+                                  "timePosted": (DateTime.now().millisecondsSinceEpoch/86400000).toString()
+                                });
+
+                                final http.Response response = await http.post(
+                                  Uri.parse('http://foodgrindapi-env.eba-agpkwh2q.us-east-1.elasticbeanstalk.com/postQuote/'),
+                                  headers: <String, String>{
+                                    'Content-Type': 'application/json; charset=UTF-8',
+                                  },
+                                  body: quoteOfDayData,
+                                );
+                                routeAfterLoad = "/food";
+                                setState(() {
+                                  submitLoadingKey = false;
+                                  submitCheckmarkKey = true;
+                                });
+                                await Future.delayed(const Duration(seconds: 1), (){
+                                  setState(() {
+                                    entireDropdownWidgets = [];
+                                    submitLoadingKey = false;
+                                    submitCheckmarkKey = false;
+                                  });
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: const Text('Submit (optional)'),
+                            )
+                        ),
+                        SizedBox(
+                          height: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                      ]
+                  )
               ),
+
+              // const Padding(
+              //   padding: EdgeInsets.all(8.0),
+              //   child: Text("Reviews", style: TextStyle(
+              //       fontSize: nameFontSize, fontWeight: FontWeight.bold)),
+              // ),
+              // for (var review in currFood.reviews) reviewBlock(review)
             ],
           )
         )
@@ -895,121 +899,112 @@ class _HelpRouteState extends State<HelpRoute> {
   Widget build(BuildContext context) {
     String body = "Empty Body";
 
-    return KeyboardDismissOnTap(
-      child: Scaffold(
-          appBar: AppBar(
-            title: const Text("Help Route"),
-            backgroundColor: ColorPalette["header"],
-            automaticallyImplyLeading: true,
-            leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () {
-              setState(() {
-                Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-              });
-            }),
-          ),
-          body: Stack(
-            children: [
-              Container(
-                margin: const EdgeInsets.all(20),
-                child: Center(
-                    child: ListView(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Help Route"),
+        backgroundColor: ColorPalette["header"],
+      ),
+      body: Stack(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(20),
+            child: Center(
+              child: Column(
+                children: [
+                  Image.asset('Assets/images/FOODGRIND.png', height: 283, width: 150),
+                  Container(height: 20,),
+                  const Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina and Shreyas Rana.', style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black38), textAlign: TextAlign.center),
+
+                  Form(
+                    key: _feedbackKey,
+                    child: Column(
                       children: [
-                        Image.asset('Assets/images/FOODGRIND.png', height: 283, width: 150),
-                        Container(height: 20,),
-                        const Text('About us: FoodGrind created by Berkeley students who are too lazy to look up the menu at every dining hall to see whats not shit. It was created by Nihal Boina and Shreyas Rana.', style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black38), textAlign: TextAlign.center),
-
-                        Form(
-                            key: _feedbackKey,
-                            child: Column(
-                                children: [
-                                  Padding(
-                                      padding: const EdgeInsets.only(top: 30.0, bottom:8.0, right:8.0, left:8.0),
-                                      child: TextFormField(
-                                        decoration: const InputDecoration(
-                                          icon: Icon(Icons.comment),
-                                          labelText: 'Send feedback',
-                                        ),
-                                        validator: (value) {
-                                          body = value!;
-                                          if (body == "") body = "Empty Body";
-                                        },
-                                        keyboardType: TextInputType.multiline,
-                                        maxLines: null,
-                                      )
-                                  ),
-                                  Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(primary: ColorPalette["blueHighlight"], elevation: 0),
-                                        onPressed: () async {
-
-                                          setState(() {
-                                            submitLoadingKey = true;
-                                            submitCheckmarkKey = false;
-                                          });
-
-                                          if (_feedbackKey.currentState!.validate()) {}
-                                          // String? deviceId = await _getId();
-
-                                          ///TODO insert email feedback
-                                          final Email sendEmail = Email(
-                                            body: body,
-                                            subject: 'FoodGrind Feedback',
-                                            recipients: ['foodgrindcal@gmail.com'],
-                                            isHTML: false,
-                                          );
-
-                                          await FlutterEmailSender.send(sendEmail);
-                                          setState(() {
-                                            submitLoadingKey = false;
-                                            submitCheckmarkKey = true;
-                                          });
-                                          await Future.delayed(const Duration(seconds: 1), (){
-                                            setState(() {
-                                              submitLoadingKey = false;
-                                              submitCheckmarkKey = false;
-                                              Navigator.pushNamedAndRemoveUntil(context, '/help', (route) => false);
-                                            });
-                                          });
-                                        },
-                                        child: const Text('Submit'),
-                                      )
-                                  ),
-                                  SizedBox(
-                                    height: MediaQuery.of(context).viewInsets.bottom,
-                                  ),
-                                ]
+                        Padding(
+                            padding: const EdgeInsets.only(top: 30.0, bottom:8.0, right:8.0, left:8.0),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                icon: Icon(Icons.comment),
+                                labelText: 'Send feedback',
+                              ),
+                              validator: (value) {
+                                body = value!;
+                                if (body == "") body = "Empty Body";
+                              },
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
                             )
-                        )
-                      ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(primary: ColorPalette["blueHighlight"], elevation: 0),
+                            onPressed: () async {
+
+                              setState(() {
+                                submitLoadingKey = true;
+                                submitCheckmarkKey = false;
+                              });
+
+                              if (_feedbackKey.currentState!.validate()) {}
+                              // String? deviceId = await _getId();
+
+                              ///TODO insert email feedback
+                              final Email sendEmail = Email(
+                                body: body,
+                                subject: 'FoodGrind Feedback',
+                                recipients: ['foodgrindcal@gmail.com'],
+                                isHTML: false,
+                              );
+
+                              await FlutterEmailSender.send(sendEmail);
+                              setState(() {
+                                submitLoadingKey = false;
+                                submitCheckmarkKey = true;
+                              });
+                              await Future.delayed(const Duration(seconds: 1), (){
+                                setState(() {
+                                  submitLoadingKey = false;
+                                  submitCheckmarkKey = false;
+                                });
+                              });
+                            },
+                            child: const Text('Submit'),
+                          )
+                        ),
+                        SizedBox(
+                          height: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                      ]
                     )
-                ),
-              ),
-              Visibility(
-                visible: (submitLoadingKey || submitCheckmarkKey),
-                child: Container(
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                  color: Color.fromRGBO(0,0,0, 0.8),
-                ),
-              ),
-              Visibility(
-                visible: submitLoadingKey,
-                child: Align(
-                  alignment: const Alignment(0, -0.6),
-                  child: LoadingAnimationWidget.staggeredDotsWave(color: ColorPalette["header"]!, size: 100),
-                ),
-              ),
-              Visibility(
-                visible: submitCheckmarkKey,
-                child: Align(
-                  alignment: const Alignment(0, -0.6),
-                  child: LoadingAnimationWidget.beat(color: ColorPalette["header"]!, size: 100),
-                ),
-              ),
-            ],
-          )
+                  )
+                ],
+              )
+            ),
+          ),
+          Visibility(
+            visible: (submitLoadingKey || submitCheckmarkKey),
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              color: Color.fromRGBO(0,0,0, 0.8),
+            ),
+          ),
+          Visibility(
+            visible: submitLoadingKey,
+            child: Align(
+              alignment: const Alignment(0, -0.6),
+              child: LoadingAnimationWidget.staggeredDotsWave(color: ColorPalette["header"]!, size: 100),
+            ),
+          ),
+          Visibility(
+            visible: submitCheckmarkKey,
+            child: Align(
+              alignment: const Alignment(0, -0.6),
+              child: LoadingAnimationWidget.beat(color: ColorPalette["header"]!, size: 100),
+            ),
+          ),
+        ],
       )
     );
   }
